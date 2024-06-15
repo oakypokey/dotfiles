@@ -32,6 +32,10 @@ autoload -U compinit && compinit
 
 zinit cdreplay -q # replay all cached completions (recommended by docs)
 
+# Oh-my-posh init
+if [ "$TERM_PROGRAM" != "Apple_Terminal" ]; then
+  eval "$(oh-my-posh init zsh --config ~/dotfiles/ohmyposh/robbyrussel.omp.json)"
+fi
 
 # Aliases
 alias ls='ls --color'
