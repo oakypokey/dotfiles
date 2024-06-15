@@ -49,6 +49,7 @@
     "slogin",
     "telnet"
   ],
+  "Faint Text Alpha" : 0,
   "Ansi 15 Color" : {
     "Green Component" : 1,
     "Blue Component" : 1,
@@ -272,7 +273,7 @@
     }
   },
   "Window Type" : 0,
-  "Blur Radius" : 7.6471908244680851,
+  "Blur Radius" : 12.619905252659574,
   "Cursor Type" : 1,
   "Background Image Location" : "",
   "Blur" : true,
@@ -301,7 +302,7 @@
     "Blue Component" : 0.73333334922790527,
     "Red Component" : 0.73333334922790527
   },
-  "Transparency" : 0.3893506205673759,
+  "Transparency" : 0.20977393617021275,
   "Guid" : "9DBBD951-888C-4622-892D-FB646F883D79",
   "Custom Directory" : "No",
   "Ansi 3 Color" : {
