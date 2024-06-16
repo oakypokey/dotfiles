@@ -24,7 +24,7 @@ zinit light Aloxaf/fzf-tab # use fzf with other things
 # Add snippets
 zinit snippet OMZP::git
 zinit snippet OMZP::sudo
-zinit snippet OMZP:: aws
+zinit snippet OMZP::aws
 zinit snippet OMZP::command-not-found
 
 # Load autocompletions
@@ -79,4 +79,8 @@ zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls --color $realpath'
 
 # Shell integrations
 eval "$(fzf --zsh)" # fzf integration -- make sure installed via pkg manager like brew
-eval "$(zoxide init --cmd cd zsh)" # add zoxide
+eval "$(zoxide init --cmd cd zsh)" # add zoxide (better cd) - install via brew
+eval "$(pyenv virtualenv-init -)" # add pyenv management
+
+# Created by `pipx` on 2024-06-15 07:08:33
+export PATH="$PATH:/Users/oakypokey/.local/bin"

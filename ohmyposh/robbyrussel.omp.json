@@ -36,6 +36,22 @@
         }
       ],
       "type": "prompt"
+    },
+    {
+      "type": "rprompt",
+      "overflow": "hidden",
+      "segments": [
+        {
+          "type": "executiontime",
+          "style": "plain",
+          "foreground": "yellow",
+          "background":"transparent",
+          "template": "{{ .FormattedMs }}",
+          "properties": {
+            "threshold": 5000
+          }
+        }
+      ]
     }
   ],
   "final_space": true,
