@@ -1,0 +1,51 @@
+{
+    "files.autoSave": "afterDelay",
+    "editor.formatOnPaste": true,
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "modifications",
+    "editor.formatOnType": true,
+    "diffEditor.codeLens": true,
+    "workbench.editorAssociations": {
+        "*.csv": "gc-excelviewer-csv-editor"
+    },
+    "editor.fontFamily": "JetBrains Mono",
+    "editor.fontLigatures": true,
+    "svelte.enable-ts-plugin": true,
+    "git.openRepositoryInParentFolders": "never",
+    "workbench.iconTheme": "vscode-icons",
+    "prisma.showPrismaDataPlatformNotification": false,
+    "workbench.sideBar.location": "right",
+    "editor.rulers": [
+        88
+    ],
+    "files.autoSaveWhenNoErrors": true,
+    "python.languageServer": "Pylance",
+    "workbench.colorTheme": "Monokai",
+    "workbench.preferredDarkColorTheme": "Abyss",
+    "playwright.showTrace": false,
+    "files.exclude": {
+        ".mypy_cache": true,
+        ".pytest_cache": true,
+        "**/__pycache__": true
+    },
+    "python.analysis.typeCheckingMode": "strict",
+    "python.analysis.inlayHints.variableTypes": true,
+    "python.analysis.inlayHints.functionReturnTypes": true,
+    "vsicons.associations.folders": [
+        {
+            "icon": "blueprint",
+            "extensions": [
+                "core"
+            ],
+            "format": "FileFormat.svg"
+        },
+        {
+            "icon": "component",
+            "extensions": [
+                "infra"
+            ],
+            "format": "FileFormat.svg"
+        }
+    ],
+    "jupyter.askForKernelRestart": false
+}
