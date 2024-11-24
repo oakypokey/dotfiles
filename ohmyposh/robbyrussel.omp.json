@@ -13,7 +13,19 @@
         {
           "foreground": "#56B6C2",
           "properties": {
-            "style": "folder"
+            "display_mode": "environment",
+            "fetch_virtual_env": true,
+            "home_enabled": true
+          },
+          "style": "plain",
+          "template": "{{ if .Venv }} (\ue235){{ end }}",
+          "type": "python"
+        },
+        {
+          "foreground": "#56B6C2",
+          "properties": {
+            "style": "folder",
+            "fetch_virtual_env": true
           },
           "style": "plain",
           "template": " {{ .Path }} ",
