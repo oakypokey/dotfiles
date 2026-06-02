@@ -1,0 +1,7 @@
+sauce() {
+  if [[ ! -d ".venv" ]]; then
+    uv venv
+  fi
+
+  source ./.venv/bin/activate
+}
