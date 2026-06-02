@@ -1,7 +1,9 @@
 # Added by ForgeCode installer
 export PATH="/Users/oakypokey/.local/bin:$PATH"
 export PATH="$PATH:/Users/oakypokey/Bin"
-export EDITOR="code --wait"
+export EDITOR="nvim"
+export GITEA_HOST="https://cryptic.spren"
+export GITEA_ACCESS_TOKEN=$(security find-generic-password -s "GITEA_ACCESS_TOKEN" -w -a $(whoami))
 
 if [[ -f "/opt/homebrew/bin/brew" ]] then
   # If you're using macOS, you'll want this enabled
@@ -50,6 +52,27 @@ fi
 alias ls='ls --color'
 alias python=python3
 alias cde='code $(fzfg -m --preview="bat --color=always {}")'
+
+brew() {
+  command brew "$@"
+  local status=$?
+
+  if [[ $status -eq 0 ]]; then
+    case "$1" in
+      install|uninstall|remove|rm|tap|untap)
+        if command -v chezmoi >/dev/null 2>&1; then
+          local brewfile
+          brewfile="$(chezmoi source-path ~/.Brewfile 2>/dev/null)"
+          if [[ -n "$brewfile" ]]; then
+            command brew bundle dump --file "$brewfile" --force --describe
+          fi
+        fi
+        ;;
+    esac
+  fi
+
+  return $status
+}
 
 # Utilities
 ## Checks to see if python venv exists otherwise creates new one
@@ -125,4 +148,3 @@ export PATH="$PATH:/Users/oakypokey/.local/bin:/usr/local/bin:/Users/oakypokey/.
 AUTO_NOTIFY_IGNORE+=("docker", "cde")
 
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
-

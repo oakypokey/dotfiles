@@ -1,6 +1,8 @@
 {{- $email := promptStringOnce . "email" "Email address" -}}
+{{- $opencodeHost := promptStringOnce . "opencode_host" "OpenCode provider host or IP address" -}}
 {{- $name := promptStringOnce . "name" "Name" -}}
 
 [data]
     email = {{ $email | quote }}
     name = {{ $name | quote }}
+    opencode_host = {{ $opencodeHost | quote }}
