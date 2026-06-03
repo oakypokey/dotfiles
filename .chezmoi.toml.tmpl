@@ -30,6 +30,10 @@
 {{- $name := promptStringOnce . "name" "Name" -}}
 {{- $homeDir := printf "/Users/%s" .chezmoi.username -}}
 
+[update]
+    command = "zsh"
+    args = [{{ printf "%s/.config/chezmoi/update.zsh" $homeDir | quote }}]
+
 [data]
     email = {{ $email | quote }}
     gitea_access_token_available = {{ or $giteaAccessTokenInKeychain (ne $giteaAccessToken "") }}
