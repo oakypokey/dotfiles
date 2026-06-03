@@ -1,5 +1,7 @@
+local gh = require 'util.github'
+
 vim.pack.add {
-  'https://github.com/sphamba/smear-cursor.nvim',
+  gh 'sphamba/smear-cursor.nvim',
 }
 
 require('smear_cursor').setup {

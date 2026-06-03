@@ -1,13 +1,15 @@
 -- opencode.lua
 --
 -- Brings opencode into neovim
+local gh = require 'util.github'
+
 vim.pack.add {
   {
-    src = 'https://github.com/nickjvandyke/opencode.nvim',
+    src = gh 'nickjvandyke/opencode.nvim',
     version = vim.version.range '*',
   },
   {
-    src = 'https://github.com/folke/snacks.nvim',
+    src = gh 'folke/snacks.nvim',
   },
 }
 

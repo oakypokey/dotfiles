@@ -7,12 +7,14 @@
 -- kickstart.nvim and not kitchen-sink.nvim ;)
 -- Depends on mason.nvim from plugins/050-lsp/010-lsp.lua
 
+local gh = require 'util.github'
+
 vim.pack.add {
-  'https://github.com/mfussenegger/nvim-dap',
-  'https://github.com/rcarriga/nvim-dap-ui',
-  'https://github.com/nvim-neotest/nvim-nio',
-  'https://github.com/jay-babu/mason-nvim-dap.nvim',
-  'https://github.com/leoluz/nvim-dap-go',
+  gh 'mfussenegger/nvim-dap',
+  gh 'rcarriga/nvim-dap-ui',
+  gh 'nvim-neotest/nvim-nio',
+  gh 'jay-babu/mason-nvim-dap.nvim',
+  gh 'leoluz/nvim-dap-go',
 }
 
 local dap = require 'dap'

@@ -1,6 +1,8 @@
 -- lua/plugins/autoreload.lua
+local gh = require 'util.github'
+
 vim.pack.add { {
-  src = 'https://github.com/ccntrq/autoreload.nvim',
+  src = gh 'ccntrq/autoreload.nvim',
 } }
 
 require('autoreload').setup {

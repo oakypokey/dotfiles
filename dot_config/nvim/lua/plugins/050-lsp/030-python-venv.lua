@@ -1,8 +1,10 @@
 vim.api.nvim_create_autocmd('VimEnter', {
   once = true,
   callback = function()
+    local gh = require 'util.github'
+
     vim.pack.add {
-      'https://github.com/tnfru/nvim-venv-detector',
+      gh 'tnfru/nvim-venv-detector',
     }
 
     require('venv_detector').setup {
