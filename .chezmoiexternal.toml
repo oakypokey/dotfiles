@@ -1,7 +1,7 @@
-["Bin/scripts/fzf-git.sh"]
+["Bin/scripts/fzf-git"]
 type = "git-repo"
 url = "https://github.com/junegunn/fzf-git.sh.git"
 refreshPeriod = "168h"
 
-["Bin/scripts/fzf-git.sh".pull]
+["Bin/scripts/fzf-git".pull]
 args = ["--ff-only"]

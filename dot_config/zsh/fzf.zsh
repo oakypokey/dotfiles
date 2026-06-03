@@ -25,4 +25,4 @@ _fzf_comprun() {
   esac
 }
 
-source "$HOME/Bin/scripts/fzf-git.sh/fzf-git.sh"
+source "$HOME/Bin/scripts/fzf-git/fzf-git.sh"
