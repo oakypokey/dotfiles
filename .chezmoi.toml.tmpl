@@ -9,7 +9,24 @@
 {{- end -}}
 {{- end -}}
 {{- $giteaHost := promptStringOnce . "gitea_host" "Gitea host URL" "https://cryptic.spren" -}}
-{{- $opencodeHost := promptStringOnce . "opencode_host" "OpenCode provider host or IP address" -}}
+{{- $opencodeProviderOllama := promptBoolOnce . "opencode_provider_ollama" "Include OpenCode Ollama provider" true -}}
+{{- $opencodeProviderMetal := promptBoolOnce . "opencode_provider_metal" "Include OpenCode Metal provider" true -}}
+{{- $opencodeProviderOpenai := promptBoolOnce . "opencode_provider_openai" "Include OpenCode OpenAI provider" true -}}
+{{- $opencodeOllamaHostDefault := "http://localhost:11434/v1" -}}
+{{- $legacyOpencodeHost := get . "opencode_host" -}}
+{{- if $legacyOpencodeHost -}}
+{{- $opencodeOllamaHostDefault = $legacyOpencodeHost -}}
+{{- end -}}
+{{- $opencodeOllamaHost := "" -}}
+{{- if $opencodeProviderOllama -}}
+{{- $opencodeOllamaHost = promptStringOnce . "opencode_ollama_host" "OpenCode Ollama base URL" $opencodeOllamaHostDefault -}}
+{{- end -}}
+{{- $opencodeMetalHost := "" -}}
+{{- if $opencodeProviderMetal -}}
+{{- $opencodeMetalHost = promptStringOnce . "opencode_metal_host" "OpenCode Metal base URL" "http://localhost:11435/v1" -}}
+{{- end -}}
+{{- $opencodeMcpChoices := list "chrome-devtools" "gitea" "context7" -}}
+{{- $opencodeMcpServers := promptMultichoiceOnce . "opencode_mcp_servers" "OpenCode MCP servers to include" $opencodeMcpChoices (list "chrome-devtools" "gitea") -}}
 {{- $name := promptStringOnce . "name" "Name" -}}
 {{- $homeDir := printf "/Users/%s" .chezmoi.username -}}
 
@@ -19,5 +36,10 @@
     gitea_host = {{ $giteaHost | quote }}
     local_bin = {{ printf "%s/.local/bin" $homeDir | quote }}
     name = {{ $name | quote }}
-    opencode_host = {{ $opencodeHost | quote }}
+    opencode_mcp_servers = {{ $opencodeMcpServers | toToml }}
+    opencode_metal_host = {{ $opencodeMetalHost | quote }}
+    opencode_ollama_host = {{ $opencodeOllamaHost | quote }}
+    opencode_provider_metal = {{ $opencodeProviderMetal }}
+    opencode_provider_ollama = {{ $opencodeProviderOllama }}
+    opencode_provider_openai = {{ $opencodeProviderOpenai }}
     user_bin = {{ printf "%s/Bin" $homeDir | quote }}

@@ -1,55 +1,51 @@
+{{- $opencodeProviderMetal := get . "opencode_provider_metal" | default false -}}
+{{- $opencodeProviderOllama := get . "opencode_provider_ollama" | default false -}}
+{{- $opencodeProviderOpenai := get . "opencode_provider_openai" | default false -}}
+{{- $opencodeOllamaHost := get . "opencode_ollama_host" | default "" -}}
+{{- $opencodeMetalHost := get . "opencode_metal_host" | default "" -}}
+{{- $opencodeMcpServers := get . "opencode_mcp_servers" | default (list) -}}
+{{- define "openaiCompatibleProvider" }}
+    "{{ .id }}": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "{{ .name }}",
+      "options": {
+        "baseURL": "{{ .baseURL }}"
+      },
+      "models": {{ .models | toPrettyJson | trimSuffix "\n" | replace "\n" "\n      " }}
+    }
+{{- end -}}
 {
   "$schema": "https://opencode.ai/config.json",
   "share": "disabled",
-  "small_model": "dawggiehaus-metal/apple-foundationmodel",
+  "small_model": "metal/apple-foundationmodel",
   "disabled_providers": [
     "github-copilot",
     "opencode"
   ],
-  "agent": {
+  "agent": {{ if $opencodeProviderMetal }}{
     "lean": {
       "mode": "subagent",
       "description": "Use to generate short snippets",
-      "model": "dawggiehaus-metal/apple-foundationmodel",
+      "model": "metal/apple-foundationmodel",
       "prompt": "You are a concise assistant. Answer directly.",
       "permission": {
         "*": "deny"
       }
     }
-  },
+  }{{ else }}{}{{ end }},
   "provider": {
-    "dawggiehaus-ollama": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "Ollama (Dawggiehaus)",
-      "options": {
-        "baseURL": "http://{{ .opencode_host }}:11434/v1"
-      },
-      "models": {
-        "gemma4:e4b": {
-          "name": "Gemma 4 [e4b]",
-          "limit": {
-            "context": 131072,
-            "output": 2048
-          }
-        }
-      }
-    },
-    "dawggiehaus-metal": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "Metal (Dawggiehaus)",
-      "options": {
-        "baseURL": "http://{{ .opencode_host }}:11435/v1"
-      },
-      "models": {
-        "apple-foundationmodel": {
-          "name": "Apple Foundational Model",
-          "limit": {
-            "context": 4096,
-            "output": 1024
-          }
-        }
-      }
-    },
+{{- $providerComma := false -}}
+{{- if $opencodeProviderOllama }}
+{{- $models := dict "gemma4:e4b" (dict "name" "Gemma 4 [e4b]" "limit" (dict "context" 131072 "output" 2048)) -}}
+{{- template "openaiCompatibleProvider" (dict "id" "ollama" "name" "Ollama" "baseURL" $opencodeOllamaHost "models" $models) }}
+{{- $providerComma = true -}}
+{{- end }}
+{{- if $opencodeProviderMetal }}{{ if $providerComma }},{{ end }}
+{{- $models := dict "apple-foundationmodel" (dict "name" "Apple Foundational Model" "limit" (dict "context" 4096 "output" 1024)) -}}
+{{- template "openaiCompatibleProvider" (dict "id" "metal" "name" "Metal" "baseURL" $opencodeMetalHost "models" $models) }}
+{{- $providerComma = true -}}
+{{- end }}
+{{- if $opencodeProviderOpenai }}{{ if $providerComma }},{{ end }}
     "openai": {
       "options": {
         "reasoningEffort": "medium",
@@ -281,8 +277,11 @@
         }
       }
     }
+{{- end }}
   },
   "mcp": {
+{{- $mcpComma := false -}}
+{{- if has "chrome-devtools" $opencodeMcpServers }}
     "chrome-devtools": {
       "type": "local",
       "command": [
@@ -290,7 +289,10 @@
         "-y",
         "chrome-devtools-mcp@latest"
       ]
-    },
+    }
+{{- $mcpComma = true -}}
+{{- end }}
+{{- if has "gitea" $opencodeMcpServers }}{{ if $mcpComma }},{{ end }}
     "gitea": {
       "type": "local",
       "command": [
@@ -301,6 +303,14 @@
         "stdio"
       ]
     }
+{{- $mcpComma = true -}}
+{{- end }}
+{{- if has "context7" $opencodeMcpServers }}{{ if $mcpComma }},{{ end }}
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp"
+    }
+{{- end }}
   },
   "plugin": [
     "opencode-beads",
