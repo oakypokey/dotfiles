@@ -1,5 +1,10 @@
 local gh = require 'util.github'
 
-vim.pack.add({
-  { src = gh 'mbbill/undotree', name = 'undotree' },
-}, { load = false })
+return {
+  src = gh('mbbill/undotree'),
+  name = 'undotree',
+  cmd = 'UndotreeToggle',
+  init = function()
+    vim.keymap.set('n', '<leader>u', function() vim.cmd.UndotreeToggle() end, { desc = 'Toggle UndoTree' })
+  end,
+}

@@ -3,5 +3,8 @@
 
 local gh = require 'util.github'
 
-vim.pack.add { gh 'ngynkvn/gotmpl.nvim' }
-require('gotmpl').setup {}
+return {
+  src = gh('ngynkvn/gotmpl.nvim'),
+  ft = { 'gotmpl', 'gohtmltmpl', 'helm' },
+  config = function() require('gotmpl').setup {} end,
+}

@@ -4,5 +4,9 @@ local gh = require 'util.github'
 
 -- Enable `lukas-reineke/indent-blankline.nvim`
 -- See `:help ibl`
-vim.pack.add { gh 'lukas-reineke/indent-blankline.nvim' }
-require('ibl').setup {}
+return {
+  src = gh('lukas-reineke/indent-blankline.nvim'),
+  event = 'BufReadPost',
+  main = 'ibl',
+  opts = {},
+}

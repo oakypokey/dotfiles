@@ -3,5 +3,8 @@
 
 local gh = require 'util.github'
 
-vim.pack.add { gh 'windwp/nvim-autopairs' }
-require('nvim-autopairs').setup {}
+return {
+  src = gh('windwp/nvim-autopairs'),
+  event = 'InsertEnter',
+  opts = {},
+}

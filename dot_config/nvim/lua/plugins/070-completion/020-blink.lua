@@ -2,9 +2,15 @@ local gh = require 'util.github'
 
 -- [[ Autocomplete Engine ]]
 -- Depends on LuaSnip from plugins/070-completion/010-luasnip.lua
-vim.pack.add { { src = gh 'saghen/blink.cmp', version = vim.version.range '1.*' } }
-require('blink.cmp').setup {
-  keymap = {
+return {
+  src = gh('saghen/blink.cmp'),
+  version = vim.version.range('1.*'),
+  event = 'InsertEnter',
+  dependencies = {
+    { src = gh('L3MON4D3/LuaSnip') },
+  },
+  opts = {
+    keymap = {
     -- 'default' (recommended) for mappings similar to built-in completions
     --   <c-y> to accept ([y]es) the completion.
     --    This will auto-import if your LSP supports it.
@@ -30,25 +36,25 @@ require('blink.cmp').setup {
 
     -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
     --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
-  },
+    },
 
-  appearance = {
+    appearance = {
     -- 'mono' (default) for 'Nerd Font Mono' or 'normal' for 'Nerd Font'
     -- Adjusts spacing to ensure icons are aligned
     nerd_font_variant = 'mono',
-  },
+    },
 
-  completion = {
+    completion = {
     -- By default, you may press `<c-space>` to show the documentation.
     -- Optionally, set `auto_show = true` to show the documentation after a delay.
     documentation = { auto_show = false, auto_show_delay_ms = 500 },
-  },
+    },
 
-  sources = {
-    default = { 'lsp', 'path', 'snippets' },
-  },
+    sources = {
+      default = { 'lsp', 'path', 'snippets' },
+    },
 
-  snippets = { preset = 'luasnip' },
+    snippets = { preset = 'luasnip' },
 
   -- Blink.cmp includes an optional, recommended rust fuzzy matcher,
   -- which automatically downloads a prebuilt binary when enabled.
@@ -57,8 +63,9 @@ require('blink.cmp').setup {
   -- the rust implementation via `'prefer_rust_with_warning'`
   --
   -- See `:help blink-cmp-config-fuzzy` for more information
-  fuzzy = { implementation = 'lua' },
+    fuzzy = { implementation = 'lua' },
 
-  -- Shows a signature help window while you type arguments for a function
-  signature = { enabled = true },
+    -- Shows a signature help window while you type arguments for a function
+    signature = { enabled = true },
+  },
 }

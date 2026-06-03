@@ -35,6 +35,38 @@ table.sort(files, function(a, b)
   return pa < pb
 end)
 
-for _, path in ipairs(files) do
-  require(module_name(path))
+local specs = {}
+
+local function is_spec(spec)
+  return type(spec[1]) == 'string'
+    or spec.src ~= nil
+    or spec.dir ~= nil
+    or spec.url ~= nil
+    or spec.import ~= nil
+    or spec.name ~= nil
 end
+
+local function add_spec(spec)
+  if not spec then return end
+  if type(spec) ~= 'table' then return end
+
+  if is_spec(spec) then
+    table.insert(specs, spec)
+    return
+  end
+
+  for _, item in ipairs(spec) do
+    add_spec(item)
+  end
+end
+
+for _, path in ipairs(files) do
+  add_spec(require(module_name(path)))
+end
+
+require('zpack').setup {
+  defaults = {
+    confirm = false,
+  },
+  spec = specs,
+}

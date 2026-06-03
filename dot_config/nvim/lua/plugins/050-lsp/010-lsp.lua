@@ -32,8 +32,12 @@ local gh = require 'util.github'
 -- and elegantly composed help section, `:help lsp-vs-treesitter`
 
 -- Useful status updates for LSP.
-vim.pack.add { gh 'j-hui/fidget.nvim' }
-require('fidget').setup {}
+local specs = {
+  {
+    src = gh('j-hui/fidget.nvim'),
+    config = function() require('fidget').setup {} end,
+  },
+}
 
 -- Enable the following language servers
 --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
@@ -88,32 +92,37 @@ local servers = {
   },
 }
 
-vim.pack.add {
-  gh 'neovim/nvim-lspconfig',
-  gh 'mason-org/mason.nvim',
-  gh 'mason-org/mason-lspconfig.nvim',
-  gh 'WhoIsSethDaniel/mason-tool-installer.nvim',
-}
+table.insert(specs, {
+  src = gh('neovim/nvim-lspconfig'),
+  dependencies = {
+    { src = gh('mason-org/mason.nvim') },
+    { src = gh('mason-org/mason-lspconfig.nvim') },
+    { src = gh('WhoIsSethDaniel/mason-tool-installer.nvim') },
+  },
+  config = function()
+    -- Automatically install LSPs and related tools to stdpath for Neovim
+    require('mason').setup {}
 
--- Automatically install LSPs and related tools to stdpath for Neovim
-require('mason').setup {}
+    -- Ensure the servers and tools above are installed
+    --
+    -- To check the current status of installed tools and/or manually install
+    -- other tools, you can run
+    --    :Mason
+    --
+    -- You can press `g?` for help in this menu.
+    local ensure_installed = vim.tbl_keys(servers or {})
+    vim.list_extend(ensure_installed, {
+      -- You can add other tools here that you want Mason to install
+      'ruff',
+    })
 
--- Ensure the servers and tools above are installed
---
--- To check the current status of installed tools and/or manually install
--- other tools, you can run
---    :Mason
---
--- You can press `g?` for help in this menu.
-local ensure_installed = vim.tbl_keys(servers or {})
-vim.list_extend(ensure_installed, {
-  -- You can add other tools here that you want Mason to install
-  'ruff',
+    require('mason-tool-installer').setup { ensure_installed = ensure_installed }
+
+    for name, server in pairs(servers) do
+      vim.lsp.config(name, server)
+      vim.lsp.enable(name)
+    end
+  end,
 })
 
-require('mason-tool-installer').setup { ensure_installed = ensure_installed }
-
-for name, server in pairs(servers) do
-  vim.lsp.config(name, server)
-  vim.lsp.enable(name)
-end
+return specs

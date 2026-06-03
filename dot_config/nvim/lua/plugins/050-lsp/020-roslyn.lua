@@ -1,5 +1,3 @@
-vim.lsp.enable 'roslyn_ls'
-
 vim.lsp.config('roslyn_ls', {
   filetypes = { 'razor', 'cs' },
 
@@ -10,3 +8,5 @@ vim.lsp.config('roslyn_ls', {
     },
   },
 })
+
+vim.lsp.enable 'roslyn_ls'
