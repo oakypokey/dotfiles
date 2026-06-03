@@ -333,5 +333,16 @@
     "opencode-conductor-plugin",
     "opencode-openai-codex-auth",
     "@tarquinen/opencode-dcp@latest"
-  ]
+  ],
+  "permission": {
+    "external_directory": {
+      "*": "ask",
+      "$HOME/.config/agents/rules/**": "allow",
+      "$HOME/.config/opencode/rules/**": "allow",
+      "/tmp/**": "allow",
+      "/var/tmp/**": "allow",
+      "/private/tmp/**": "allow",
+      "/private/var/tmp/**": "allow"
+    }
+  }
 }
