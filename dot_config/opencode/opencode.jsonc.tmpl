@@ -22,6 +22,20 @@
     "github-copilot",
     "opencode"
   ],
+  "enabled_providers": [
+{{- $enabledProviderComma := false -}}
+{{- if $opencodeProviderOllama }}
+    "ollama"
+{{- $enabledProviderComma = true -}}
+{{- end }}
+{{- if $opencodeProviderMetal }}{{ if $enabledProviderComma }},{{ end }}
+    "metal"
+{{- $enabledProviderComma = true -}}
+{{- end }}
+{{- if $opencodeProviderOpenai }}{{ if $enabledProviderComma }},{{ end }}
+    "openai"
+{{- end }}
+  ],
   "agent": {{ if $opencodeProviderMetal }}{
     "lean": {
       "mode": "subagent",
