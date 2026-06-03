@@ -1,5 +1,13 @@
 {{- $email := promptStringOnce . "email" "Email address" -}}
-{{- $giteaAccessTokenSecret := promptStringOnce . "gitea_access_token_secret" "Gitea access token keychain item (optional)" -}}
+{{- $giteaAccessTokenWanted := promptBoolOnce . "gitea_access_token_available" "Configure Gitea access token" false -}}
+{{- $giteaAccessTokenInKeychain := and $giteaAccessTokenWanted (exec "security" "find-generic-password" "-s" "GITEA_ACCESS_TOKEN" "-a" .chezmoi.username) -}}
+{{- $giteaAccessToken := "" -}}
+{{- if and $giteaAccessTokenWanted (not $giteaAccessTokenInKeychain) -}}
+{{- $giteaAccessToken = promptStringOnce . "gitea_access_token" "Gitea access token" -}}
+{{- if $giteaAccessToken -}}
+{{- exec "security" "add-generic-password" "-U" "-s" "GITEA_ACCESS_TOKEN" "-a" .chezmoi.username "-w" $giteaAccessToken -}}
+{{- end -}}
+{{- end -}}
 {{- $giteaHost := promptStringOnce . "gitea_host" "Gitea host URL" "https://cryptic.spren" -}}
 {{- $opencodeHost := promptStringOnce . "opencode_host" "OpenCode provider host or IP address" -}}
 {{- $name := promptStringOnce . "name" "Name" -}}
@@ -7,7 +15,7 @@
 
 [data]
     email = {{ $email | quote }}
-    gitea_access_token_secret = {{ $giteaAccessTokenSecret | quote }}
+    gitea_access_token_available = {{ or $giteaAccessTokenInKeychain (ne $giteaAccessToken "") }}
     gitea_host = {{ $giteaHost | quote }}
     local_bin = {{ printf "%s/.local/bin" $homeDir | quote }}
     name = {{ $name | quote }}
