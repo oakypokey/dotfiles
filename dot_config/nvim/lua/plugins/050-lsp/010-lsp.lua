@@ -37,6 +37,10 @@ local specs = {
     src = gh('j-hui/fidget.nvim'),
     config = function() require('fidget').setup {} end,
   },
+  {
+    src = gh('mason-org/mason.nvim'),
+    config = function() require('mason').setup {} end,
+  },
 }
 
 -- Enable the following language servers
@@ -95,14 +99,10 @@ local servers = {
 table.insert(specs, {
   src = gh('neovim/nvim-lspconfig'),
   dependencies = {
-    { src = gh('mason-org/mason.nvim') },
     { src = gh('mason-org/mason-lspconfig.nvim') },
     { src = gh('WhoIsSethDaniel/mason-tool-installer.nvim') },
   },
   config = function()
-    -- Automatically install LSPs and related tools to stdpath for Neovim
-    require('mason').setup {}
-
     -- Ensure the servers and tools above are installed
     --
     -- To check the current status of installed tools and/or manually install
