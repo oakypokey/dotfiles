@@ -39,12 +39,6 @@ local specs = {
 			require("fidget").setup({})
 		end,
 	},
-	{
-		src = gh("mason-org/mason.nvim"),
-		config = function()
-			require("mason").setup({})
-		end,
-	},
 }
 
 -- Enable the following language servers
@@ -125,6 +119,12 @@ local servers = {
 table.insert(specs, {
 	src = gh("neovim/nvim-lspconfig"),
 	dependencies = {
+		{
+			src = gh("mason-org/mason.nvim"),
+			config = function()
+				require("mason").setup({})
+			end,
+		},
 		{ src = gh("mason-org/mason-lspconfig.nvim") },
 		{ src = gh("WhoIsSethDaniel/mason-tool-installer.nvim") },
 	},
