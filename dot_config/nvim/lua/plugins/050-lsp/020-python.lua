@@ -1,7 +1,21 @@
 local gh = require 'util.github'
 local registry = require 'lsp.registry'
 
-registry.tool 'ruff'
+registry.server('basedpyright', {
+  settings = {
+    basedpyright = {
+      analysis = {
+        diagnosticMode = 'openFilesOnly',
+      },
+    },
+  },
+})
+
+registry.server('ruff', {
+  on_attach = function(client)
+    client.server_capabilities.hoverProvider = false
+  end,
+})
 
 return {
   src = gh('tnfru/nvim-venv-detector'),

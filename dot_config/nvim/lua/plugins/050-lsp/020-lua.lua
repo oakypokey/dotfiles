@@ -30,6 +30,7 @@ registry.server('lua_ls', {
   ---@type lspconfig.settings.lua_ls
   settings = {
     Lua = {
+      diagnostics = { workspaceEvent = 'None' },
       format = { enable = false }, -- Formatting is done by stylua.
     },
   },
