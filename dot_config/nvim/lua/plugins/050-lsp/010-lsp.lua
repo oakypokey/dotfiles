@@ -33,7 +33,9 @@ table.insert(specs, {
 		{ src = gh("WhoIsSethDaniel/mason-tool-installer.nvim") },
 	},
 	config = function()
-		local ensure_installed = vim.tbl_keys(registry.servers)
+		local ensure_installed = vim.tbl_map(function(name)
+			return registry.servers[name].mason or name
+		end, vim.tbl_keys(registry.servers))
 		vim.list_extend(ensure_installed, registry.tools)
 
 		require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
