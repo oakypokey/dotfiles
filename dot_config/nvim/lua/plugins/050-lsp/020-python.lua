@@ -1,4 +1,7 @@
 local gh = require 'util.github'
+local registry = require 'lsp.registry'
+
+registry.tool 'ruff'
 
 return {
   src = gh('tnfru/nvim-venv-detector'),

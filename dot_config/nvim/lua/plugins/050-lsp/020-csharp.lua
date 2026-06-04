@@ -1,12 +1,12 @@
-vim.lsp.config('roslyn_ls', {
+local registry = require 'lsp.registry'
+
+registry.server('roslyn_ls', {
   filetypes = { 'razor', 'cs' },
 
   settings = {
-    ['csharp|backround_analysis'] = {
+    ['csharp|background_analysis'] = {
       dotnet_analyzer_diagnostics_scope = 'openFiles',
       dotnet_compiler_diagnostics_scope = 'openFiles',
     },
   },
 })
-
-vim.lsp.enable 'roslyn_ls'
