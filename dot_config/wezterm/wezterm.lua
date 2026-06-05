@@ -3,12 +3,13 @@ local act = wezterm.action
 
 local config = wezterm.config_builder()
 
-local kanagawa = wezterm.plugin.require("https://github.com/sravioli/kanagawa.wz")
 local cmdpicker = wezterm.plugin.require("https://github.com/abidibo/wezterm-cmdpicker")
+local nordic, _ = wezterm.color.load_scheme(wezterm.config_dir .. "/colors/nordic.toml")
 
-kanagawa.apply_to_config(config, {
-	scheme = "wave",
-})
+config.color_schemes = {
+	nordic = nordic,
+}
+config.color_scheme = "nordic"
 
 config.font = wezterm.font_with_fallback({
 	{

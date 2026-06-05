@@ -5,3 +5,8 @@ refreshPeriod = "168h"
 
 ["Bin/scripts/fzf-git".pull]
 args = ["--ff-only"]
+
+[".config/wezterm/colors/nordic.toml"]
+type = "file"
+url = "https://raw.githubusercontent.com/AlexvZyl/nordic.nvim/main/platforms/wezterm/nordic.toml"
+refreshPeriod = "168h"
