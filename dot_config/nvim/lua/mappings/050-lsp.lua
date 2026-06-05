@@ -1,3 +1,107 @@
+local function diagnostic_under_cursor(bufnr)
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local line = cursor[1] - 1
+  local col = cursor[2]
+  local diagnostics = vim.diagnostic.get(bufnr, { lnum = line })
+
+  for _, diagnostic in ipairs(diagnostics) do
+    local start_col = diagnostic.col or 0
+    local end_col = diagnostic.end_col or start_col
+    if col >= start_col and col <= end_col then
+      return diagnostic
+    end
+  end
+
+  return diagnostics[1]
+end
+
+local function apply_lsp_code_action(action, bufnr)
+  local client = action.client_id and vim.lsp.get_client_by_id(action.client_id)
+  local encoding = client and client.offset_encoding or 'utf-16'
+
+  if action.edit then
+    vim.lsp.util.apply_workspace_edit(action.edit, encoding)
+  end
+
+  local command = action.command
+  if command and client then
+    client:exec_cmd(type(command) == 'table' and command or action, { bufnr = bufnr })
+  end
+end
+
+local function request_opencode_fix(bufnr)
+  local diagnostic = diagnostic_under_cursor(bufnr)
+  if not diagnostic then
+    vim.notify('No diagnostic under cursor', vim.log.levels.WARN, { title = 'opencode' })
+    return
+  end
+
+  local line = vim.api.nvim_get_current_line()
+  local prompt = table.concat({
+    'fix @this',
+    '',
+    'Diagnostic: ' .. diagnostic.message,
+    'Current line: ' .. line,
+  }, '\n')
+
+  local promise = require('opencode').prompt(prompt)
+  if promise and promise.next then
+    promise:next(function()
+      if vim.api.nvim_buf_is_valid(bufnr) then
+        vim.api.nvim_buf_call(bufnr, function() vim.cmd.checktime() end)
+      end
+    end)
+  end
+
+  vim.defer_fn(function()
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_call(bufnr, function() vim.cmd.checktime() end)
+    end
+  end, 1000)
+end
+
+local function code_action_with_opencode(bufnr)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+  local diagnostic = diagnostic_under_cursor(bufnr)
+  local range_params = vim.lsp.util.make_range_params(0, 'utf-16')
+  local params = vim.tbl_extend('force', range_params, {
+    context = { diagnostics = diagnostic and { diagnostic } or vim.diagnostic.get(bufnr) },
+  })
+
+  vim.lsp.buf_request_all(bufnr, 'textDocument/codeAction', params, function(results)
+    local items = {}
+
+    for client_id, result in pairs(results) do
+      for _, action in ipairs(result.result or {}) do
+        action.client_id = client_id
+        table.insert(items, action)
+      end
+    end
+
+    table.insert(items, {
+      title = 'OpenCode: fix @this' .. (diagnostic and (' - ' .. diagnostic.message) or ''),
+      opencode = true,
+    })
+
+    vim.ui.select(items, {
+      prompt = 'Code action',
+      format_item = function(item)
+        return item.title or (type(item.command) == 'string' and item.command) or 'Code action'
+      end,
+    }, function(choice)
+      if not choice then
+        return
+      end
+
+      if choice.opencode then
+        request_opencode_fix(bufnr)
+      else
+        apply_lsp_code_action(choice, bufnr)
+      end
+    end)
+  end)
+end
+
 --  This function gets run when an LSP attaches to a particular buffer.
 --    That is to say, every time a new file is opened that is associated with
 --    an lsp (for example, opening `main.rs` is associated with `rust_analyzer`) this
@@ -21,7 +125,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
 
     -- Execute a code action, usually your cursor needs to be on top of an error
     -- or a suggestion from your LSP for this to activate.
-    map('gra', vim.lsp.buf.code_action, '[G]oto Code [A]ction', { 'n', 'x' })
+    map('gra', function() code_action_with_opencode(event.buf) end, '[G]oto Code [A]ction', { 'n', 'x' })
 
     -- WARN: This is not Goto Definition, this is Goto Declaration.
     --  For example, in C this would take you to the header.
