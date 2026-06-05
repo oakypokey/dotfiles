@@ -7,6 +7,26 @@ vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
+local function editable_buffer_count()
+  local count = 0
+  for _, buf in ipairs(vim.fn.getbufinfo { buflisted = 1 }) do
+    if vim.bo[buf.bufnr].buftype == '' then count = count + 1 end
+  end
+  return count
+end
+
+vim.api.nvim_create_user_command('SmartQuit', function()
+  if vim.bo.buftype ~= '' then
+    vim.cmd.quit()
+  elseif editable_buffer_count() > 1 then
+    vim.cmd 'confirm bdelete'
+  else
+    vim.cmd 'confirm qall'
+  end
+end, {})
+
+vim.cmd [[cnoreabbrev <expr> q getcmdtype() == ':' && getcmdline() == 'q' ? 'SmartQuit' : 'q']]
+
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
 -- is not what someone will guess without a bit more experience.

@@ -17,7 +17,17 @@ return {
   end,
   config = function()
     require('neo-tree').setup {
+      close_if_last_window = true,
+      window = {
+        mappings = {
+          e = 'open',
+          E = function() vim.cmd 'Neotree focus filesystem left' end,
+          b = function() vim.cmd 'Neotree focus buffers left' end,
+          g = function() vim.cmd 'Neotree focus git_status left' end,
+        },
+      },
       filesystem = {
+        hijack_netrw_behavior = 'open_default',
         use_libuv_file_watcher = true,
         window = {
           mappings = {

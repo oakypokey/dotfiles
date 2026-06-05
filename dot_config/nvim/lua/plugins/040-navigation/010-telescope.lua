@@ -45,6 +45,24 @@ return {
     { '<leader>sh', function() require('telescope.builtin').help_tags() end, desc = '[S]earch [H]elp' },
     { '<leader>sk', function() require('telescope.builtin').keymaps() end, desc = '[S]earch [K]eymaps' },
     { '<leader>sf', function() require('telescope.builtin').find_files() end, desc = '[S]earch [F]iles' },
+    {
+      '<leader>gsf',
+      function()
+        require('telescope.builtin').find_files {
+          find_command = {
+            'fd',
+            '--type',
+            'f',
+            '--hidden',
+            '--exclude',
+            '.git',
+            '--exclude',
+            'node_modules',
+          },
+        }
+      end,
+      desc = '[G]it [S]earch [F]iles',
+    },
     { '<leader>ss', function() require('telescope.builtin').builtin() end, desc = '[S]earch [S]elect Telescope' },
     { '<leader>sw', function() require('telescope.builtin').grep_string() end, mode = { 'n', 'v' }, desc = '[S]earch current [W]ord' },
     { '<leader>sg', function() require('telescope.builtin').live_grep() end, desc = '[S]earch by [G]rep' },
