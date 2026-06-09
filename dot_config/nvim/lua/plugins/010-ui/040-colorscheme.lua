@@ -14,7 +14,8 @@ return {
       italic_comments = false,
       telescope = {
         style = 'classic'
-      }
+      },
+      bright_border = true
     }
 
     -- Load the colorscheme here.
