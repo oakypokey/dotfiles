@@ -13,6 +13,11 @@ return {
       options = {
         modified_icon = '',
         color_icons = true,
+        diagnostics = 'nvim_lsp',
+        always_show_bufferline = false,
+        show_if_buffers_are_at_least = 2,
+        show_buffer_close_icons = false,
+        show_close_icon = false,
         separator_style = 'slope',
       },
     }
