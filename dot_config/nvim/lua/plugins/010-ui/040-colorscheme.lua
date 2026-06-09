@@ -12,6 +12,9 @@ return {
   config = function()
     require('nordic').setup {
       italic_comments = false,
+      telescope = {
+        style = 'classic'
+      }
     }
 
     -- Load the colorscheme here.

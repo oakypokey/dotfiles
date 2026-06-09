@@ -32,6 +32,7 @@ local gh = require 'util.github'
 ---@type (string|vim.pack.Spec)[]
 local dependencies = {
   { src = gh('nvim-lua/plenary.nvim') },
+  { src = gh('kdheepak/lazygit.nvim') },
   { src = gh('nvim-telescope/telescope-ui-select.nvim') },
 }
 if vim.fn.executable('make') == 1 then table.insert(dependencies, { src = gh('nvim-telescope/telescope-fzf-native.nvim'), build = 'make' }) end
@@ -118,6 +119,7 @@ return {
 
     -- Enable Telescope extensions if they are installed
     pcall(require('telescope').load_extension, 'fzf')
+    pcall(require('telescope').load_extension, 'lazygit')
     pcall(require('telescope').load_extension, 'ui-select')
   end,
 }

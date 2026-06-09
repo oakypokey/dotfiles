@@ -23,6 +23,7 @@ return {
           E = function() vim.cmd 'Neotree focus filesystem left' end,
           b = function() vim.cmd 'Neotree focus buffers left' end,
           g = function() vim.cmd 'Neotree focus git_status left' end,
+          ['<space>'] = 'none',
         },
       },
       filesystem = {
