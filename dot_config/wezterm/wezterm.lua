@@ -39,7 +39,7 @@ config.scrollback_lines = 10000
 config.adjust_window_size_when_changing_font_size = false
 
 -- Leader key
-config.leader = { key = "a", mods = "CTRL", timeout_milliseconds = 1000 }
+config.leader = { key = "w", mods = "CTRL|SHIFT", timeout_milliseconds = 3000 }
 
 config.keys = {
 	{ key = "Enter", mods = "ALT", action = act.ToggleFullScreen },
