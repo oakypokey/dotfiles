@@ -140,7 +140,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
     if client and vim.bo[event.buf].filetype ~= '' then
       if client:supports_method('workspace/diagnostic', event.buf) then
         vim.lsp.buf.workspace_diagnostics { client_id = client.id }
-      elseif client.config.filetypes then
+      elseif client.config.filetypes and client.name ~= 'roslyn_ls' then
         require('workspace-diagnostics').populate_workspace_diagnostics(client, event.buf)
       end
     end
