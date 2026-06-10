@@ -21,7 +21,7 @@ return {
 		{
 			"<leader>or",
 			function()
-				require("overseer").run_template()
+				require("overseer").run_task()
 			end,
 			desc = "Overseer: Run Task",
 		},
