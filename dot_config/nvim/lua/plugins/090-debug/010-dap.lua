@@ -5,6 +5,7 @@ return {
 	dependencies = {
 		{ src = gh("rcarriga/nvim-dap-ui") },
 		{ src = gh("nvim-neotest/nvim-nio") },
+		{ src = gh("theHamsta/nvim-dap-virtual-text") },
 		{ src = gh("jay-babu/mason-nvim-dap.nvim") },
 		{ src = gh("leoluz/nvim-dap-go") },
 		{ src = gh("mfussenegger/nvim-dap-python") },
@@ -168,6 +169,7 @@ return {
 				},
 			},
 		})
+		require("nvim-dap-virtual-text").setup()
 
 		dap.listeners.after.event_initialized["dapui_config"] = dapui.open
 		dap.listeners.before.event_terminated["dapui_config"] = dapui.close
@@ -191,15 +193,20 @@ return {
 
 		local netcoredbg = mason_package_path("netcoredbg", "netcoredbg")
 		if netcoredbg or vim.fn.executable("netcoredbg") == 1 then
-			dap.adapters.coreclr = {
+			local netcoredbg_adapter = {
 				type = "executable",
 				command = netcoredbg or "netcoredbg",
 				args = { "--interpreter=vscode" },
+				options = {
+					detached = false,
+				},
 			}
+			dap.adapters.coreclr = netcoredbg_adapter
+			dap.adapters.netcoredbg = netcoredbg_adapter
 
-			dap.configurations.cs = {
+			local dotnet_configurations = {
 				{
-					type = "coreclr",
+					type = "netcoredbg",
 					name = "Launch .NET project",
 					request = "launch",
 					program = function()
@@ -207,15 +214,21 @@ return {
 					end,
 					cwd = "${workspaceFolder}",
 					stopAtEntry = false,
+					console = "integratedTerminal",
 					preLaunchTask = "build",
 				},
 				{
-					type = "coreclr",
+					type = "netcoredbg",
 					name = "Attach to .NET process",
 					request = "attach",
 					processId = dap_utils.pick_process,
+					cwd = "${workspaceFolder}",
 				},
 			}
+
+			for _, language in ipairs({ "cs", "fsharp", "vb" }) do
+				dap.configurations[language] = dotnet_configurations
+			end
 		end
 
 		local js_debug_adapter = mason_package_path("js-debug-adapter", "js-debug/src/dapDebugServer.js")
@@ -243,6 +256,8 @@ return {
 				name = "Launch current file with Node",
 				program = "${file}",
 				cwd = "${workspaceFolder}",
+				console = "integratedTerminal",
+				internalConsoleOptions = "neverOpen",
 				sourceMaps = true,
 			},
 			{
@@ -251,6 +266,7 @@ return {
 				name = "Attach to Node process",
 				processId = dap_utils.pick_process,
 				cwd = "${workspaceFolder}",
+				internalConsoleOptions = "neverOpen",
 				sourceMaps = true,
 			},
 		}
@@ -264,6 +280,8 @@ return {
 			runtimeArgs = { "run" },
 			program = "${file}",
 			cwd = "${workspaceFolder}",
+			console = "integratedTerminal",
+			internalConsoleOptions = "neverOpen",
 			sourceMaps = true,
 		})
 		table.insert(typescript_configurations, 2, {
@@ -273,6 +291,8 @@ return {
 			runtimeExecutable = local_or_global_command("tsx"),
 			program = "${file}",
 			cwd = "${workspaceFolder}",
+			console = "integratedTerminal",
+			internalConsoleOptions = "neverOpen",
 			sourceMaps = true,
 		})
 		table.insert(typescript_configurations, 3, {
@@ -282,6 +302,8 @@ return {
 			runtimeExecutable = local_or_global_command("ts-node"),
 			program = "${file}",
 			cwd = "${workspaceFolder}",
+			console = "integratedTerminal",
+			internalConsoleOptions = "neverOpen",
 			sourceMaps = true,
 		})
 		table.insert(typescript_configurations, {
@@ -289,10 +311,12 @@ return {
 			request = "launch",
 			name = "Launch current file with Deno",
 			runtimeExecutable = "deno",
-			runtimeArgs = { "run", "-A" },
+			runtimeArgs = { "run", "-A", "--inspect-brk" },
 			runtimeVersion = "deno",
 			program = "${file}",
 			cwd = "${workspaceFolder}",
+			console = "integratedTerminal",
+			internalConsoleOptions = "neverOpen",
 			sourceMaps = true,
 		})
 		table.insert(typescript_configurations, {
@@ -302,6 +326,7 @@ return {
 			address = "127.0.0.1",
 			port = 9229,
 			cwd = "${workspaceFolder}",
+			internalConsoleOptions = "neverOpen",
 			sourceMaps = true,
 		})
 

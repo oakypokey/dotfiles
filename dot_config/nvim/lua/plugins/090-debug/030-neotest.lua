@@ -5,36 +5,95 @@ local function path_type(path)
 	return stat and stat.type or nil
 end
 
+local function glob_to_pattern(glob)
+	return "^" .. glob:gsub("([%.%+%-%^%$%(%)%%])", "%%%1"):gsub("%*", ".*") .. "$"
+end
+
 local function has_file(dir, name)
 	if name:find("*", 1, true) then
-		return #vim.fs.find(name, { path = dir, type = "file", limit = 1 }) > 0
+		local pattern = glob_to_pattern(name)
+
+		local found = vim.fs.find(function(candidate, path)
+			return candidate:match(pattern) ~= nil
+				and path_type(vim.fs.joinpath(path, candidate)) == "file"
+		end, {
+			path = dir,
+			type = "file",
+			limit = 1,
+		})
+
+		return #found > 0
 	end
+
 	return path_type(vim.fs.joinpath(dir, name)) == "file"
 end
 
 local adapter_markers = {
 	["neotest-deno"] = { "deno.lock", "deno.json", "deno.jsonc", "import_map.json" },
-	["neotest-dotnet"] = { "*.csproj", "*.sln", "global.json" },
+	["neotest-bun"] = { "bun.lock", "bun.lockb", "bunfig.toml" },
+	["neotest-vitest"] = {
+		"vitest.config.ts",
+		"vitest.config.js",
+		"vitest.config.mts",
+		"vite.config.ts",
+		"vite.config.js",
+	},
+	["neotest-vstest"] = { "*.csproj", "*.sln", "global.json" },
 	["neotest-go"] = { "go.mod" },
-	["neotest-python"] = { "pyproject.toml", "setup.py", "setup.cfg", "tox.ini" },
-	["neotest-jest"] = { "package.json" },
+	["neotest-python"] = {
+		"pyproject.toml",
+		"setup.py",
+		"setup.cfg",
+		"tox.ini",
+		"pytest.ini",
+	},
+	["neotest-jest"] = {
+		"jest.config.js",
+		"jest.config.ts",
+		"jest.config.mjs",
+		"jest.config.cjs",
+	},
 }
 
+local js_markers = vim.list_extend(
+	vim.list_extend(vim.list_extend({}, adapter_markers["neotest-deno"]), adapter_markers["neotest-bun"]),
+	vim.list_extend(vim.deepcopy(adapter_markers["neotest-jest"]), adapter_markers["neotest-vitest"])
+)
+
 local filetype_markers = {
-	cs = adapter_markers["neotest-dotnet"],
+	cs = adapter_markers["neotest-vstest"],
 	go = adapter_markers["neotest-go"],
-	javascript = { "deno.lock", "deno.json", "deno.jsonc", "import_map.json", "package.json" },
-	javascriptreact = { "deno.lock", "deno.json", "deno.jsonc", "import_map.json", "package.json" },
+	javascript = js_markers,
+	javascriptreact = js_markers,
 	python = adapter_markers["neotest-python"],
-	typescript = { "deno.lock", "deno.json", "deno.jsonc", "import_map.json", "package.json" },
-	typescriptreact = { "deno.lock", "deno.json", "deno.jsonc", "import_map.json", "package.json" },
+	typescript = js_markers,
+	typescriptreact = js_markers,
+}
+
+local ignored_dirs = {
+	[".git"] = true,
+	[".direnv"] = true,
+	[".venv"] = true,
+	[".zpack"] = true,
+	["__pycache__"] = true,
+	["bin"] = true,
+	["build"] = true,
+	["dist"] = true,
+	["node_modules"] = true,
+	["obj"] = true,
+	["out"] = true,
+	["pack"] = true,
+	["site"] = true,
+	["target"] = true,
+	["venv"] = true,
 }
 
 local function nearest_root(path, markers)
 	local absolute = vim.fs.abspath(path)
 	local current = path_type(absolute) == "directory" and absolute or vim.fs.dirname(absolute)
+
 	while current do
-		for _, marker in ipairs(markers) do
+		for _, marker in ipairs(markers or {}) do
 			if has_file(current, marker) then
 				return current
 			end
@@ -44,131 +103,183 @@ local function nearest_root(path, markers)
 		if parent == current then
 			break
 		end
+
 		current = parent
 	end
 
 	return nil
 end
 
+local function current_path()
+	local file = vim.fn.expand("%:p")
+	if file ~= "" then
+		return file
+	end
+
+	return vim.fn.getcwd()
+end
+
 local function resolve_test_root(path)
 	local absolute = vim.fs.abspath(path ~= "" and path or vim.fn.getcwd())
-	local markers = filetype_markers[vim.bo.filetype] or {}
-	return nearest_root(absolute, markers) or vim.fs.dirname(absolute)
+	local markers = filetype_markers[vim.bo.filetype]
+
+	if not markers then
+		return nil
+	end
+
+	-- Important: no fallback to vim.fs.dirname(absolute).
+	-- If no marker exists, there is no test root.
+	return nearest_root(absolute, markers)
 end
 
 local function run_args(path, extra)
 	if extra then
 		return vim.tbl_extend("force", { path }, extra)
 	end
+
 	return path
 end
 
 local function run_root_args(path, extra)
-	local args = vim.tbl_extend("force", { resolve_test_root(path) }, extra or {})
-	return args
+	local root = resolve_test_root(path)
+
+	if not root then
+		vim.notify("Neotest: not inside a recognised test project", vim.log.levels.WARN)
+		return nil
+	end
+
+	return vim.tbl_extend("force", { root }, extra or {})
 end
 
-local function deno_adapter()
-	local neotest_deno = require("neotest-deno")
-	local adapter = neotest_deno({
-		dap_adapter = "pwa-node",
-		root_files = { "package.json" },
-	})
-	local discover_positions = adapter.discover_positions
-	local results = adapter.results
+local function has_marker(markers)
+	return nearest_root(current_path(), markers) ~= nil
+end
 
-	adapter.discover_positions = function(path)
-		local tree = discover_positions(path)
-		if not tree or #tree:children() > 0 then
-			return tree
+local function guarded_adapter(adapter, markers)
+	local original_root = adapter.root
+	local original_filter_dir = adapter.filter_dir
+
+	adapter.root = function(dir)
+		local root = nearest_root(dir or current_path(), markers)
+
+		if not root then
+			return nil
 		end
 
-		local ok, lines = pcall(vim.fn.readfile, path)
-		if not ok then
-			return tree
-		end
-
-		local nodes = { tree:data() }
-		for row, line in ipairs(lines) do
-			local name = line:match("Deno%.test%(%s*['\"]([^'\"]+)['\"]")
-				or line:match("Deno%.test%(%s*{%s*name%s*=%s*['\"]([^'\"]+)['\"]")
-			if name then
-				table.insert(nodes, {
-					id = path .. "::" .. name,
-					name = name,
-					path = path,
-					range = { row - 1, 0, row - 1, #line },
-					type = "test",
-				})
-			end
-		end
-
-		if #nodes == 1 then
-			return tree
-		end
-
-		return require("neotest.types").Tree.from_list(nodes, function(position)
-			return position.id
-		end)
+		-- Prefer explicit marker root over adapter fallback.
+		-- This prevents ~/.config/nvim or plugin roots from becoming test roots.
+		return root
 	end
 
-	local function add_result(fixed, id, value)
-		fixed[id] = value
-		local normalized = vim.fs.normalize(id)
-		fixed[normalized] = value
-
-		local path, name = id:match("^(.-)::(.*)$")
-		if path and name then
-			local normalized_path = vim.fs.normalize(path)
-			fixed[normalized_path .. "::" .. name] = value
-
-			local clean_name = name:gsub('^"', ""):gsub('"$', "")
-			clean_name = vim.split(clean_name, "\r", { plain = true })[1]
-			fixed[normalized_path .. "::" .. clean_name] = value
-		end
-	end
-
-	adapter.results = function(spec, result, tree)
-		local parsed = results(spec, result, tree)
-		local fixed = {}
-		local cwd = spec.cwd and vim.fs.normalize(spec.cwd) or nil
-		for id, value in pairs(parsed) do
-			add_result(fixed, id, value)
-
-			local path, name = id:match("^(.-)::(.*)$")
-			local result_path = path or id
-			if cwd and not vim.startswith(result_path, "/") then
-				local absolute = vim.fs.normalize(vim.fs.joinpath(cwd, result_path))
-				add_result(fixed, name and (absolute .. "::" .. name) or absolute, value)
-			end
+	adapter.filter_dir = function(name, rel_path, root)
+		if ignored_dirs[name] then
+			return false
 		end
 
-		for _, node in tree:iter_nodes() do
-			local position = node:data()
-			if position.type == "file" and not fixed[position.id] then
-				local prefix = vim.fs.normalize(position.id) .. "::"
-				for id, value in pairs(fixed) do
-					if vim.startswith(vim.fs.normalize(id), prefix) then
-						fixed[position.id] = value
-						break
-					end
-				end
-			end
-
-			if position.type == "test" and fixed[position.id] then
-				for parent in node:iter_parents() do
-					local parent_position = parent:data()
-					if not fixed[parent_position.id] then
-						fixed[parent_position.id] = fixed[position.id]
-					end
-				end
-			end
+		if original_filter_dir then
+			return original_filter_dir(name, rel_path, root)
 		end
 
-		return fixed
+		return true
 	end
 
 	return adapter
+end
+
+local function build_adapters()
+	local adapters = {}
+
+	if has_marker(adapter_markers["neotest-python"]) then
+		table.insert(
+			adapters,
+			guarded_adapter(
+				require("neotest-python")({
+					runner = "pytest",
+					dap = { justMyCode = false },
+					args = { "-q" },
+				}),
+				adapter_markers["neotest-python"]
+			)
+		)
+	end
+
+	if has_marker(adapter_markers["neotest-jest"]) then
+		table.insert(
+			adapters,
+			guarded_adapter(
+				require("neotest-jest")({
+					jestCommand = "npm test --",
+					cwd = function(path)
+						return nearest_root(path or current_path(), adapter_markers["neotest-jest"]) or vim.fn.getcwd()
+					end,
+				}),
+				adapter_markers["neotest-jest"]
+			)
+		)
+	end
+
+	if has_marker(adapter_markers["neotest-vitest"]) then
+		table.insert(
+			adapters,
+			guarded_adapter(require("neotest-vitest"), adapter_markers["neotest-vitest"])
+		)
+	end
+
+	if has_marker(adapter_markers["neotest-bun"]) then
+		table.insert(
+			adapters,
+			guarded_adapter(
+				require("neotest-bun")({
+					test_command = "bun test",
+				}),
+				adapter_markers["neotest-bun"]
+			)
+		)
+	end
+
+	if has_marker(adapter_markers["neotest-go"]) then
+		table.insert(
+			adapters,
+			guarded_adapter(
+				require("neotest-go")({
+					experimental = {
+						test_table = true,
+					},
+				}),
+				adapter_markers["neotest-go"]
+			)
+		)
+	end
+
+	if has_marker(adapter_markers["neotest-vstest"]) then
+		table.insert(
+			adapters,
+			guarded_adapter(require("neotest-vstest"), adapter_markers["neotest-vstest"])
+		)
+	end
+
+	if has_marker(adapter_markers["neotest-deno"]) then
+		table.insert(
+			adapters,
+			guarded_adapter(
+				require("neotest-deno")({
+					dap_adapter = "pwa-node",
+					root_files = adapter_markers["neotest-deno"],
+				}),
+				adapter_markers["neotest-deno"]
+			)
+		)
+	end
+
+	return adapters
+end
+
+local function run_all_tests()
+	local args = run_root_args(current_path())
+
+	if args then
+		require("neotest").run.run(args)
+	end
 end
 
 return {
@@ -179,9 +290,11 @@ return {
 		{ src = gh("nvim-treesitter/nvim-treesitter") },
 		{ src = gh("nvim-neotest/neotest-python") },
 		{ src = gh("nvim-neotest/neotest-jest") },
+		{ src = gh("marilari88/neotest-vitest") },
+		{ src = gh("jutonz/neotest-bun") },
 		{ src = gh("MarkEmmons/neotest-deno") },
 		{ src = gh("nvim-neotest/neotest-go") },
-		{ src = gh("Issafalcon/neotest-dotnet") },
+		{ src = gh("nsidorenco/neotest-vstest") },
 	},
 	keys = {
 		{
@@ -201,18 +314,31 @@ return {
 		},
 		{
 			"<leader>tA",
-			function()
-				require("neotest").run.run(run_root_args(vim.fn.expand("%:p")))
-			end,
+			run_all_tests,
 			desc = "Test: Run All",
 		},
 		{
 			"<leader>td",
 			function()
 				pcall(vim.cmd, "ZPack load nvim-dap")
-				require("neotest").run.run(run_args(vim.fn.expand("%:p"), { strategy = "dap" }))
+
+				-- Debug nearest test.
+				require("neotest").run.run({ strategy = "dap" })
 			end,
 			desc = "Test: Debug Nearest",
+		},
+		{
+			"<leader>tD",
+			function()
+				pcall(vim.cmd, "ZPack load nvim-dap")
+
+				-- Debug current file.
+				require("neotest").run.run({
+					vim.fn.expand("%:p"),
+					strategy = "dap",
+				})
+			end,
+			desc = "Test: Debug File",
 		},
 		{
 			"<leader>ts",
@@ -251,29 +377,30 @@ return {
 		},
 	},
 	config = function()
-		require("neotest").setup({
-			adapters = {
-				require("neotest-python")({
-					dap = { justMyCode = false },
-				}),
-				require("neotest-jest")({
-					jestCommand = "npm test --",
-				}),
-				require("neotest-go")({
-					experimental = {
-						test_table = true,
-					},
-				}),
-				require("neotest-dotnet")({
-					dap = {
-						adapter_name = "coreclr",
-					},
-				}),
-				deno_adapter(),
+		vim.g.neotest_vstest = {
+			dap_settings = {
+				type = "netcoredbg",
 			},
+		}
+
+		require("neotest").setup({
+			adapters = build_adapters(),
 			discovery = {
 				enabled = true,
-				concurrent = 0,
+			},
+			running = {
+				concurrent = true,
+			},
+			summary = {
+				enabled = true,
+			},
+			output = {
+				enabled = true,
+				open_on_run = "short",
+			},
+			quickfix = {
+				enabled = true,
+				open = false,
 			},
 		})
 	end,
