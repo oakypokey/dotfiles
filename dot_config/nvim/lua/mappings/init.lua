@@ -13,9 +13,7 @@ local files = {}
 local mappings_dir = vim.fs.joinpath(vim.fn.stdpath 'config', 'lua', 'mappings')
 
 for name, type in vim.fs.dir(mappings_dir) do
-  if type == 'file' and name:match '%.lua$' and name ~= 'init.lua' then
-    table.insert(files, vim.fs.joinpath(mappings_dir, name))
-  end
+  if type == 'file' and name:match '%.lua$' and name ~= 'init.lua' then table.insert(files, vim.fs.joinpath(mappings_dir, name)) end
 end
 
 table.sort(files, function(a, b)

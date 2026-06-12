@@ -7,9 +7,7 @@ local function diagnostic_under_cursor(bufnr)
   for _, diagnostic in ipairs(diagnostics) do
     local start_col = diagnostic.col or 0
     local end_col = diagnostic.end_col or start_col
-    if col >= start_col and col <= end_col then
-      return diagnostic
-    end
+    if col >= start_col and col <= end_col then return diagnostic end
   end
 
   return diagnostics[1]
@@ -19,14 +17,10 @@ local function apply_lsp_code_action(action, bufnr)
   local client = action.client_id and vim.lsp.get_client_by_id(action.client_id)
   local encoding = client and client.offset_encoding or 'utf-16'
 
-  if action.edit then
-    vim.lsp.util.apply_workspace_edit(action.edit, encoding)
-  end
+  if action.edit then vim.lsp.util.apply_workspace_edit(action.edit, encoding) end
 
   local command = action.command
-  if command and client then
-    client:exec_cmd(type(command) == 'table' and command or action, { bufnr = bufnr })
-  end
+  if command and client then client:exec_cmd(type(command) == 'table' and command or action, { bufnr = bufnr }) end
 end
 
 local function request_opencode_fix(bufnr)
@@ -47,16 +41,12 @@ local function request_opencode_fix(bufnr)
   local promise = require('opencode').prompt(prompt)
   if promise and promise.next then
     promise:next(function()
-      if vim.api.nvim_buf_is_valid(bufnr) then
-        vim.api.nvim_buf_call(bufnr, function() vim.cmd.checktime() end)
-      end
+      if vim.api.nvim_buf_is_valid(bufnr) then vim.api.nvim_buf_call(bufnr, function() vim.cmd.checktime() end) end
     end)
   end
 
   vim.defer_fn(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_call(bufnr, function() vim.cmd.checktime() end)
-    end
+    if vim.api.nvim_buf_is_valid(bufnr) then vim.api.nvim_buf_call(bufnr, function() vim.cmd.checktime() end) end
   end, 1000)
 end
 
@@ -85,13 +75,9 @@ local function code_action_with_opencode(bufnr)
 
     vim.ui.select(items, {
       prompt = 'Code action',
-      format_item = function(item)
-        return item.title or (type(item.command) == 'string' and item.command) or 'Code action'
-      end,
+      format_item = function(item) return item.title or (type(item.command) == 'string' and item.command) or 'Code action' end,
     }, function(choice)
-      if not choice then
-        return
-      end
+      if not choice then return end
 
       if choice.opencode then
         request_opencode_fix(bufnr)
