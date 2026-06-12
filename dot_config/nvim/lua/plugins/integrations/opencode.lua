@@ -94,6 +94,15 @@ return repo.spec('opencode', {
     vim.keymap.set({ 'n', 't' }, '<C-.>', function() require('snacks.terminal').toggle(opencode_cmd, snacks_terminal_opts) end, { desc = 'Toggle opencode' })
   end,
   config = function()
+    -- opencode.nvim schedules Server.disconnect as an unbound method.
+    local Server = require 'opencode.server'
+    local disconnect = Server.disconnect
+    Server.disconnect = function(self)
+      if self == nil then self = Server.connected end
+      if self == nil then return end
+      return disconnect(self)
+    end
+
     -- snacks integration
     local function opencode_send(...) return require('opencode').snacks_picker_send(...) end
 
