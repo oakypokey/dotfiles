@@ -93,7 +93,29 @@ return repo.spec('dap', {
     local dapui = require 'dapui'
     local mason_registry = require 'mason-registry'
 
+    vim.fn.sign_define('DapBreakpoint', {
+      text = '⚪',
+      texthl = 'DapBreakpointSymbol',
+      linehl = 'DapBreakpoint',
+      numhl = 'DapBreakpoint',
+    })
+
+    vim.fn.sign_define('DapStopped', {
+      text = '🔴',
+      texthl = 'yellow',
+      linehl = 'DapBreakpoint',
+      numhl = 'DapBreakpoint',
+    })
+    vim.fn.sign_define('DapBreakpointRejected', {
+      text = '⭕',
+      texthl = 'DapStoppedSymbol',
+      linehl = 'DapBreakpoint',
+      numhl = 'DapBreakpoint',
+    })
+
     require('mason-nvim-dap').setup {
+      ensure_installed = {},
+      automatic_installation = false,
       automatic_setup = true,
       handlers = registry.dap.handlers,
     }
@@ -110,24 +132,27 @@ return repo.spec('dap', {
       return command
     end
 
-    ---@diagnostic disable-next-line: missing-fields
     dapui.setup {
-      icons = { expanded = '▾', collapsed = '▸', current_frame = '*' },
-      ---@diagnostic disable-next-line: missing-fields
-      controls = {
-        icons = {
-          pause = '⏸',
-          play = '▶',
-          step_into = '⏎',
-          step_over = '⏭',
-          step_out = '⏮',
-          step_back = 'b',
-          run_last = '▶▶',
-          terminate = '⏹',
-          disconnect = '⏏',
+      expand_lines = true,
+      controls = { enabled = false }, -- no extra play/step buttons
+      floating = { border = 'rounded' },
+      -- Set dapui window
+      render = {
+        max_type_length = 60,
+        max_value_lines = 200,
+      },
+      -- Only one layout: just the "scopes" (variables) list at the bottom
+      layouts = {
+        {
+          elements = {
+            { id = 'scopes', size = 1.0 }, -- 100% of this panel is scopes
+          },
+          size = 15, -- height in lines (adjust to taste)
+          position = 'bottom', -- "left", "right", "top", "bottom"
         },
       },
     }
+
     require('nvim-dap-virtual-text').setup()
 
     dap.listeners.after.event_initialized['dapui_config'] = dapui.open

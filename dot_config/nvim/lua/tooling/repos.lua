@@ -17,6 +17,7 @@ M.entries = {
   dap_ui = { 'rcarriga/nvim-dap-ui' },
   dap_virtual_text = { 'theHamsta/nvim-dap-virtual-text' },
   dap_go = { 'leoluz/nvim-dap-go' },
+  dap_dll_autopicker = { src = 'https://git.ramboe.io/ramboe/ramboe-dotnet-utils' },
   dap_python = { 'mfussenegger/nvim-dap-python' },
   overseer = { 'stevearc/overseer.nvim' },
 

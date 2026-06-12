@@ -22,9 +22,9 @@ registry.format_on_save 'cs'
 registry.treesitter 'c_sharp'
 
 registry.dap_tool 'netcoredbg'
+registry.dap_dependency 'dap_dll_autopicker'
 registry.dap_setup(function(context)
   local dap = require 'dap'
-  local dap_utils = require 'dap.utils'
   local netcoredbg = context.mason_package_path('netcoredbg', 'netcoredbg')
 
   if not netcoredbg and vim.fn.executable 'netcoredbg' ~= 1 then return end
@@ -33,28 +33,16 @@ registry.dap_setup(function(context)
     type = 'executable',
     command = netcoredbg or 'netcoredbg',
     args = { '--interpreter=vscode' },
-    options = { detached = false },
   }
   dap.adapters.coreclr = netcoredbg_adapter
   dap.adapters.netcoredbg = netcoredbg_adapter
 
   local dotnet_configurations = {
     {
-      type = 'netcoredbg',
-      name = 'Launch .NET project',
+      type = 'coreclr',
+      name = 'LAUNCH directly from nvim',
       request = 'launch',
-      program = function() return vim.fn.input('Path to dll: ', vim.fn.getcwd() .. '/bin/Debug/', 'file') end,
-      cwd = '${workspaceFolder}',
-      stopAtEntry = false,
-      console = 'integratedTerminal',
-      preLaunchTask = 'build',
-    },
-    {
-      type = 'netcoredbg',
-      name = 'Attach to .NET process',
-      request = 'attach',
-      processId = dap_utils.pick_process,
-      cwd = '${workspaceFolder}',
+      program = function() return require('dap-dll-autopicker').build_dll_path() end,
     },
   }
 
