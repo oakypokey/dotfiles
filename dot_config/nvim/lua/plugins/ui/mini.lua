@@ -3,6 +3,7 @@ local repo = require 'tooling.repos'
 -- [[ mini.nvim ]]
 --  A collection of various small independent plugins/modules
 return repo.spec('mini', {
+  event = 'BufReadPre',
   config = function()
     -- Better Around/Inside textobjects
     --

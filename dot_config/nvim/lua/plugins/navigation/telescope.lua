@@ -32,7 +32,6 @@ local repo = require 'tooling.repos'
 ---@type (string|vim.pack.Spec)[]
 local dependencies = {
   repo.spec 'plenary',
-  repo.spec 'lazygit',
   repo.spec 'telescope_ui_select',
 }
 if vim.fn.executable 'make' == 1 then table.insert(dependencies, repo.spec('telescope_fzf', { build = 'make' })) end
@@ -123,7 +122,6 @@ return repo.spec('telescope', {
 
     -- Enable Telescope extensions if they are installed
     pcall(require('telescope').load_extension, 'fzf')
-    pcall(require('telescope').load_extension, 'lazygit')
     pcall(require('telescope').load_extension, 'ui-select')
   end,
 })

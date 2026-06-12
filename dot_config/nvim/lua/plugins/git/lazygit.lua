@@ -1,6 +1,10 @@
 local repo = require 'tooling.repos'
 
 return repo.spec('lazygit', {
+  event = 'VeryLazy',
+  dependencies = {
+    repo.spec 'plenary',
+  },
   cmd = {
     'LazyGit',
     'LazyGitConfig',

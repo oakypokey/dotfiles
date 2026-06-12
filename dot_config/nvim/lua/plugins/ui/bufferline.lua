@@ -1,6 +1,7 @@
 local repo = require 'tooling.repos'
 
 return repo.spec('bufferline', {
+  event = 'VeryLazy',
   version = vim.version.range '*',
   dependencies = {
     repo.spec('icons', { enabled = vim.g.have_nerd_font }),
