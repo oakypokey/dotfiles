@@ -9,6 +9,9 @@ local function wait_for_tools(tools)
   local mason_registry = require 'mason-registry'
   local deadline = vim.uv.now() + timeout_ms
   local pending = vim.deepcopy(tools)
+  local next_notify = 0
+
+  vim.notify(('Mason waiting for %d tools to install...'):format(#pending), vim.log.levels.INFO)
 
   while #pending > 0 and vim.uv.now() < deadline do
     local next_pending = {}
@@ -26,10 +29,21 @@ local function wait_for_tools(tools)
     if #failed > 0 then vim.notify('Mason could not resolve tools: ' .. table.concat(failed, ', '), vim.log.levels.WARN) end
 
     pending = next_pending
-    if #pending > 0 then vim.wait(250) end
+    if #pending > 0 then
+      local now = vim.uv.now()
+      if now >= next_notify then
+        vim.notify(('Mason still waiting for %d tools: %s'):format(#pending, table.concat(pending, ', ')), vim.log.levels.INFO)
+        next_notify = now + 5000
+      end
+      vim.wait(250)
+    end
   end
 
-  if #pending > 0 then vim.notify('Mason tool install timed out: ' .. table.concat(pending, ', '), vim.log.levels.WARN) end
+  if #pending > 0 then
+    vim.notify('Mason tool install timed out: ' .. table.concat(pending, ', '), vim.log.levels.WARN)
+  else
+    vim.notify('Mason tools installed', vim.log.levels.INFO)
+  end
 end
 
 return repo.spec('mason', {
