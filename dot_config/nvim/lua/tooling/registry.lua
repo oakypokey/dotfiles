@@ -2,7 +2,7 @@ local repo = require 'tooling.repos'
 
 local M = {
   mason = { tools = {} },
-  lsp = { servers = {} },
+  lsp = { servers = {}, code_actions = {} },
   dap = { dependencies = {}, handlers = {}, setup = {} },
   lint = { linters_by_ft = {} },
   formatting = { formatters_by_ft = {}, format_on_save = {} },
@@ -34,6 +34,8 @@ function M.lsp_server(name, config)
   config.mason = nil
   M.lsp.servers[name] = config
 end
+
+function M.lsp_code_action(action) add_unique(M.lsp.code_actions, action) end
 
 function M.dap_tool(name) M.mason_tool(name) end
 

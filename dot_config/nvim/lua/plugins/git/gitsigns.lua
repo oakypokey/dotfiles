@@ -68,7 +68,7 @@ return repo.spec('gitsigns', {
         map('n', '<leader>gq', gitsigns.setqflist, { desc = 'git hunk [q]uickfix list (all changes in this file)' })
         -- Toggles
         map('n', '<leader>gB', gitsigns.toggle_current_line_blame, { desc = '[G]it toggle show [B]lame line' })
-        map('n', '<leader>ge', gitsigns.toggle_deleted, { desc = '[G]it toggle deleted lines' })
+        map('n', '<leader>ge', gitsigns.preview_hunk_inline, { desc = '[G]it preview deletions inline' })
         map('n', '<leader>gw', gitsigns.toggle_word_diff, { desc = '[G]it toggle intra-line [w]ord diff' })
 
         -- Text object

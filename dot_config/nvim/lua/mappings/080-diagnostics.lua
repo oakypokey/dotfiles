@@ -1,1 +1,0 @@
--- Trouble mappings live in the Trouble spec so zpack can lazy-load it.

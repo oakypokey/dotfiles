@@ -1,1 +1,0 @@
--- opencode and UndoTree mappings live in their plugin specs so zpack can lazy-load them.

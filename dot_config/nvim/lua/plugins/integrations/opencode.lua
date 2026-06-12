@@ -2,6 +2,7 @@
 --
 -- Brings opencode into neovim
 local repo = require 'tooling.repos'
+local registry = require 'tooling.registry'
 
 local function terminal_width() return math.floor(vim.o.columns * 0.35) end
 
@@ -36,6 +37,41 @@ local function toggle_opencode_terminal()
 
   open_opencode_terminal()
 end
+
+local function request_opencode_fix(ctx)
+  local bufnr = ctx.bufnr or vim.api.nvim_get_current_buf()
+  local diagnostic = ctx.diagnostic
+  if not diagnostic then
+    vim.notify('No diagnostic under cursor', vim.log.levels.WARN, { title = 'opencode' })
+    return
+  end
+
+  local line = vim.api.nvim_buf_get_lines(bufnr, diagnostic.lnum, diagnostic.lnum + 1, false)[1] or ''
+  local prompt = table.concat({
+    'fix @this',
+    '',
+    'Diagnostic: ' .. diagnostic.message,
+    'Current line: ' .. line,
+  }, '\n')
+
+  local promise = require('opencode').prompt(prompt)
+  if promise and promise.next then
+    promise:next(function()
+      if vim.api.nvim_buf_is_valid(bufnr) then vim.api.nvim_buf_call(bufnr, function() vim.cmd.checktime() end) end
+    end)
+  end
+
+  vim.defer_fn(function()
+    if vim.api.nvim_buf_is_valid(bufnr) then vim.api.nvim_buf_call(bufnr, function() vim.cmd.checktime() end) end
+  end, 1000)
+end
+
+registry.lsp_code_action {
+  title = 'OpenCode: fix @this',
+  kind = 'quickfix',
+  command = 'opencode.fixDiagnostic',
+  handler = request_opencode_fix,
+}
 
 return repo.spec('opencode', {
   version = vim.version.range '*',
