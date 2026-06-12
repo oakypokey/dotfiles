@@ -1,12 +1,4 @@
--- You can add your own plugins here or in other files in this directory!
---  I promise not to create any merge conflicts in this directory :)
---
--- See the kickstart.nvim README for more information
-
-local function priority(path)
-  local name = vim.fs.basename(path)
-  return tonumber(name:match '^(%d+)%-') or 100
-end
+require 'lang'
 
 local function module_name(path)
   local config = vim.fn.stdpath 'config'
@@ -28,23 +20,11 @@ end
 local files = {}
 collect(vim.fs.joinpath(vim.fn.stdpath 'config', 'lua', 'plugins'), files)
 
-table.sort(files, function(a, b)
-  local pa = priority(a)
-  local pb = priority(b)
-  if pa == pb then return a < b end
-  return pa < pb
-end)
+table.sort(files)
 
 local specs = {}
 
-local function is_spec(spec)
-  return type(spec[1]) == 'string'
-    or spec.src ~= nil
-    or spec.dir ~= nil
-    or spec.url ~= nil
-    or spec.import ~= nil
-    or spec.name ~= nil
-end
+local function is_spec(spec) return type(spec[1]) == 'string' or spec.src ~= nil or spec.dir ~= nil or spec.url ~= nil or spec.import ~= nil or spec.name ~= nil end
 
 local function add_spec(spec)
   if not spec then return end
