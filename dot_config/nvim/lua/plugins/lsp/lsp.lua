@@ -146,7 +146,6 @@ end
 return repo.spec('lsp', {
   dependencies = {
     repo.spec 'mason',
-    repo.spec('lsp_status', { opts = {} }),
   },
   config = function()
     setup_code_action_handler()
