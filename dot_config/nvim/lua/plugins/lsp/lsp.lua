@@ -44,7 +44,14 @@ local function code_actions(bufnr)
   local diagnostic = diagnostic_under_cursor(bufnr)
   local range_params = vim.lsp.util.make_range_params(0, 'utf-16')
   local params = vim.tbl_extend('force', range_params, {
-    context = { diagnostics = diagnostic and { diagnostic } or vim.diagnostic.get(bufnr) },
+    context = {
+      diagnostics = diagnostic and { diagnostic } or vim.diagnostic.get(bufnr),
+      only = {
+        vim.lsp.protocol.CodeActionKind.QuickFix,
+        vim.lsp.protocol.CodeActionKind.Refactor,
+        vim.lsp.protocol.CodeActionKind.Source,
+      },
+    },
   })
 
   vim.lsp.buf_request_all(bufnr, 'textDocument/codeAction', params, function(results)

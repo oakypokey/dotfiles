@@ -18,7 +18,10 @@ registry.lsp_server('ruff', {
   before_init = function()
     env.sync(true)
   end,
-  on_attach = function(client) client.server_capabilities.hoverProvider = false end,
+  on_attach = function(client)
+    client.server_capabilities.diagnosticProvider = false
+    client.server_capabilities.hoverProvider = false
+  end,
 })
 
 registry.linter('python', 'ruff')
