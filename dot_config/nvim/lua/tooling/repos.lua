@@ -10,7 +10,7 @@ M.entries = {
   lsp = { 'neovim/nvim-lspconfig' },
   lsp_status = { 'j-hui/fidget.nvim' },
   lsp_peek = { 'r4ppz/lspeek.nvim' },
-  venv_detector = { 'tnfru/nvim-venv-detector' },
+  venv_selector = { 'linux-cultist/venv-selector.nvim' },
 
   -- DAP
   dap = { 'mfussenegger/nvim-dap' },

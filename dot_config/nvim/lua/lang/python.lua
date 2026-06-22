@@ -1,6 +1,10 @@
+local env = require 'lang.python.env'
 local registry = require 'tooling.registry'
 
 registry.lsp_server('basedpyright', {
+  before_init = function()
+    env.sync(true)
+  end,
   settings = {
     basedpyright = {
       analysis = {
@@ -11,6 +15,9 @@ registry.lsp_server('basedpyright', {
 })
 
 registry.lsp_server('ruff', {
+  before_init = function()
+    env.sync(true)
+  end,
   on_attach = function(client) client.server_capabilities.hoverProvider = false end,
 })
 
@@ -24,6 +31,7 @@ registry.dap_dependency 'dap_python'
 registry.dap_setup(function(context)
   local debugpy_python = context.mason_package_path('debugpy', 'venv/bin/python')
   require('dap-python').setup(debugpy_python or 'python3')
+  require('dap-python').resolve_python = env.python
 end)
 
 registry.test_dependency 'neotest_python'

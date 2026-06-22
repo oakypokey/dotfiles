@@ -34,6 +34,18 @@ return repo.spec('mini', {
     -- Set `use_icons` to true if you have a Nerd Font
     statusline.setup { use_icons = vim.g.have_nerd_font }
 
+    local section_fileinfo = statusline.section_fileinfo
+
+    ---@diagnostic disable-next-line: duplicate-set-field
+    statusline.section_fileinfo = function(args)
+      local fileinfo = section_fileinfo(args)
+      local ok, venv_status = pcall(require, 'venv-selector.statusline.lualine')
+      local venv_parent = ok and venv_status.render() or ''
+      if venv_parent == '' then return fileinfo end
+
+      return fileinfo:gsub('python', 'python:' .. venv_parent, 1)
+    end
+
     -- You can configure sections in the statusline by overriding their
     -- default behavior. For example, here we set the section for
     -- cursor location to LINE:COLUMN
