@@ -13,17 +13,34 @@ local snacks_terminal_opts = {
   },
 }
 
+local function normalize_path(path)
+  return vim.fs.normalize(path or ''):gsub('/$', '')
+end
+
+local function cwd_matches(server)
+  return normalize_path(server.cwd) == normalize_path(vim.fn.getcwd())
+end
+
+local function on_terminal_init(callback)
+  if callback then vim.schedule(callback) end
+end
+
 ---@type opencode.Opts
 vim.g.opencode_opts = {
   server = {
-    start = function()
+    start = function(callback)
       local terminal = require 'snacks.terminal'
       local win = terminal.get(opencode_cmd, { create = false })
       if win then
         win:show()
+        on_terminal_init(callback)
         return
       end
-      terminal.open(opencode_cmd, snacks_terminal_opts)
+      terminal.open(opencode_cmd, vim.tbl_deep_extend('force', snacks_terminal_opts, {
+        on_create = function()
+          on_terminal_init(callback)
+        end,
+      }))
     end,
   },
 }
@@ -101,6 +118,15 @@ return repo.spec('opencode', {
       if self == nil then self = Server.connected end
       if self == nil then return end
       return disconnect(self)
+    end
+
+    -- Limit manual server selection to the current working directory.
+    local select_server = require 'opencode.ui.select_server'
+    local original_select_server = select_server.select_server
+    select_server.select_server = function(servers)
+      local matching_servers = vim.tbl_filter(cwd_matches, servers)
+      if #matching_servers == 0 then error('No `opencode` servers found for ' .. vim.fn.getcwd(), 0) end
+      return original_select_server(matching_servers)
     end
 
     -- snacks integration
