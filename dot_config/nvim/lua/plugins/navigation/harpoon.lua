@@ -9,15 +9,15 @@ return repo.spec('harpoon', {
     repo.spec 'telescope',
   },
   keys = {
-    { '<leader>[a', function() require('harpoon'):list():add() end, desc = 'Harpoon: Add file' },
-    { '<leader>[1', function() require('harpoon'):list():select(1) end, desc = 'Harpoon: Got to file 1' },
-    { '<leader>[2', function() require('harpoon'):list():select(2) end, desc = 'Harpoon: Got to file 2' },
-    { '<leader>[3', function() require('harpoon'):list():select(3) end, desc = 'Harpoon: Got to file 3' },
-    { '<leader>[4', function() require('harpoon'):list():select(4) end, desc = 'Harpoon: Got to file 4' },
-    { '<leader>[p', function() require('harpoon'):list():previous() end, desc = 'Harpoon: Prev file' },
-    { '<leader>[n', function() require('harpoon'):list():next() end, desc = 'Harpoon: Next file' },
+    { '<leader>]a', function() require('harpoon'):list():add() end, desc = 'Harpoon: Add file' },
+    { '<leader>]1', function() require('harpoon'):list():select(1) end, desc = 'Harpoon: Got to file 1' },
+    { '<leader>]2', function() require('harpoon'):list():select(2) end, desc = 'Harpoon: Got to file 2' },
+    { '<leader>]3', function() require('harpoon'):list():select(3) end, desc = 'Harpoon: Got to file 3' },
+    { '<leader>]4', function() require('harpoon'):list():select(4) end, desc = 'Harpoon: Got to file 4' },
+    { '<leader>]p', function() require('harpoon'):list():previous() end, desc = 'Harpoon: Prev file' },
+    { '<leader>]n', function() require('harpoon'):list():next() end, desc = 'Harpoon: Next file' },
     {
-      '<leader>[e',
+      '<leader>]e',
       function()
         local harpoon = require 'harpoon'
         local conf = require('telescope.config').values
