@@ -2,7 +2,6 @@
 --
 -- Brings opencode into neovim
 local repo = require 'tooling.repos'
-local registry = require 'tooling.registry'
 
 local opencode_cmd = 'opencode --port'
 ---@type snacks.terminal.Opts
@@ -13,13 +12,9 @@ local snacks_terminal_opts = {
   },
 }
 
-local function normalize_path(path)
-  return vim.fs.normalize(path or ''):gsub('/$', '')
-end
+local function normalize_path(path) return vim.fs.normalize(path or ''):gsub('/$', '') end
 
-local function cwd_matches(server)
-  return normalize_path(server.cwd) == normalize_path(vim.fn.getcwd())
-end
+local function cwd_matches(server) return normalize_path(server.cwd) == normalize_path(vim.fn.getcwd()) end
 
 ---@type opencode.Opts
 vim.g.opencode_opts = {
@@ -33,55 +28,16 @@ vim.g.opencode_opts = {
       end
       terminal.open(opencode_cmd, snacks_terminal_opts)
     end,
+    stop = function()
+      local terminal = require 'snacks.terminal'
+      local win = terminal.get(opencode_cmd, { create = false })
+      if win then
+        win:close()
+        return
+      end
+    end,
+    toggle = function() require('snacks.terminal').toggle(opencode_cmd, snacks_terminal_opts) end,
   },
-}
-
--- Optionally show upon submitting prompt
-vim.api.nvim_create_autocmd('User', {
-  pattern = { 'OpencodeEvent:tui.command.execute' },
-  callback = function(args)
-    ---@type opencode.server.Event
-    local event = args.data.event
-    if event.properties.command == 'prompt.submit' then
-      local win = require('snacks.terminal').get(opencode_cmd, { create = false })
-      if win then win:show() end
-    end
-  end,
-})
-
-local function request_opencode_fix(ctx)
-  local bufnr = ctx.bufnr or vim.api.nvim_get_current_buf()
-  local diagnostic = ctx.diagnostic
-  if not diagnostic then
-    vim.notify('No diagnostic under cursor', vim.log.levels.WARN, { title = 'opencode' })
-    return
-  end
-
-  local line = vim.api.nvim_buf_get_lines(bufnr, diagnostic.lnum, diagnostic.lnum + 1, false)[1] or ''
-  local prompt = table.concat({
-    'fix @this',
-    '',
-    'Diagnostic: ' .. diagnostic.message,
-    'Current line: ' .. line,
-  }, '\n')
-
-  local promise = require('opencode').prompt(prompt)
-  if promise and promise.next then
-    promise:next(function()
-      if vim.api.nvim_buf_is_valid(bufnr) then vim.api.nvim_buf_call(bufnr, function() vim.cmd.checktime() end) end
-    end)
-  end
-
-  vim.defer_fn(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then vim.api.nvim_buf_call(bufnr, function() vim.cmd.checktime() end) end
-  end, 1000)
-end
-
-registry.lsp_code_action {
-  title = 'OpenCode: fix @this',
-  kind = 'quickfix',
-  command = 'opencode.fixDiagnostic',
-  handler = request_opencode_fix,
 }
 
 return repo.spec('opencode', {
@@ -90,7 +46,8 @@ return repo.spec('opencode', {
     repo.spec 'snacks',
   },
   event = 'VeryLazy',
-  init = function()
+  init = function() end,
+  config = function()
     -- opencode config
     vim.o.autoread = true
 
@@ -100,16 +57,19 @@ return repo.spec('opencode', {
     vim.keymap.set('n', '<leader>aO', function() return require('opencode').operator('@this ' .. '_') end, { desc = 'Add line to opencode', expr = true })
     -- Avoid <leader> in terminal mode because Neovim watches for terminal keymaps and delays leader input.
     vim.keymap.set({ 'n', 't' }, '<C-.>', function() require('snacks.terminal').toggle(opencode_cmd, snacks_terminal_opts) end, { desc = 'Toggle opencode' })
-  end,
-  config = function()
-    -- opencode.nvim schedules Server.disconnect as an unbound method.
-    local Server = require 'opencode.server'
-    local disconnect = Server.disconnect
-    Server.disconnect = function(self)
-      if self == nil then self = Server.connected end
-      if self == nil then return end
-      return disconnect(self)
-    end
+
+    -- Optionally show upon submitting prompt
+    vim.api.nvim_create_autocmd('User', {
+      pattern = { 'OpencodeEvent:tui.command.execute' },
+      callback = function(args)
+        ---@type opencode.server.Event
+        local event = args.data.event
+        if event.properties.command == 'prompt.submit' then
+          local win = require('snacks.terminal').get(opencode_cmd, { create = false })
+          if win then win:show() end
+        end
+      end,
+    })
 
     -- Limit manual server selection to the current working directory.
     local select_server = require 'opencode.ui.select_server'
