@@ -8,8 +8,19 @@ local function wait_for_tools(tools)
 
   local mason_registry = require 'mason-registry'
   local deadline = vim.uv.now() + timeout_ms
-  local pending = vim.deepcopy(tools)
+  local pending = {}
   local next_notify = 0
+
+  for _, name in ipairs(tools) do
+    local ok, package = pcall(mason_registry.get_package, name)
+    if not ok then
+      vim.notify('Mason could not resolve tool: ' .. name, vim.log.levels.WARN)
+    elseif not package:is_installed() then
+      table.insert(pending, name)
+    end
+  end
+
+  if #pending == 0 then return end
 
   vim.notify(('Mason waiting for %d tools to install...'):format(#pending), vim.log.levels.INFO)
 
