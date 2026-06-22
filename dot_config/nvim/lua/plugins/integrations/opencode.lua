@@ -21,51 +21,17 @@ local function cwd_matches(server)
   return normalize_path(server.cwd) == normalize_path(vim.fn.getcwd())
 end
 
-local function has_matching_server(servers)
-  for _, server in ipairs(servers) do
-    if cwd_matches(server) then return true end
-  end
-  return false
-end
-
-local function wait_for_opencode_server(callback)
-  if not callback then return end
-
-  local function poll()
-    if not require('snacks.terminal').get(opencode_cmd, { create = false }) then return end
-
-    require('opencode.server.discovery').get_all()
-      :next(function(servers)
-        if has_matching_server(servers) then
-          callback()
-        else
-          vim.defer_fn(poll, 3000)
-        end
-      end)
-      :catch(function()
-        vim.defer_fn(poll, 3000)
-      end)
-  end
-
-  poll()
-end
-
 ---@type opencode.Opts
 vim.g.opencode_opts = {
   server = {
-    start = function(callback)
+    start = function()
       local terminal = require 'snacks.terminal'
       local win = terminal.get(opencode_cmd, { create = false })
       if win then
         win:show()
-        wait_for_opencode_server(callback)
         return
       end
-      terminal.open(opencode_cmd, vim.tbl_deep_extend('force', snacks_terminal_opts, {
-        on_create = function()
-          wait_for_opencode_server(callback)
-        end,
-      }))
+      terminal.open(opencode_cmd, snacks_terminal_opts)
     end,
   },
 }
