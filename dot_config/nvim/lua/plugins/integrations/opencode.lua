@@ -71,6 +71,15 @@ return repo.spec('opencode', {
       end,
     })
 
+    -- opencode.nvim schedules Server.disconnect as an unbound method.
+    local Server = require 'opencode.server'
+    local disconnect = Server.disconnect
+    Server.disconnect = function(self)
+      self = self or Server.connected
+      if not self then return end
+      return disconnect(self)
+    end
+
     -- Limit manual server selection to the current working directory.
     local select_server = require 'opencode.ui.select_server'
     local original_select_server = select_server.select_server
