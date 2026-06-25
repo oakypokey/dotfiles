@@ -1,6 +1,5 @@
 local repo = require 'tooling.repos'
 local registry = require 'tooling.registry'
-local perf = require 'util.perf'
 
 local function path_type(path)
   local stat = vim.uv.fs_stat(path)
@@ -26,7 +25,6 @@ local function has_file(dir, name)
 end
 
 local filetype_markers = {}
-local active_adapters = {}
 
 local ignored_dirs = {
   ['.git'] = true,
@@ -74,13 +72,6 @@ end
 local function resolve_test_root(path)
   local absolute = vim.fs.abspath(path ~= '' and path or vim.fn.getcwd())
   local markers = filetype_markers[vim.bo.filetype]
-
-  for _, adapter in ipairs(active_adapters) do
-    if adapter.root then
-      local ok, root = pcall(adapter.root, absolute)
-      if ok and root then return root end
-    end
-  end
 
   if not markers then return nil end
 
@@ -148,70 +139,13 @@ local function build_adapters()
     if adapter then table.insert(adapters, adapter) end
   end
 
-  active_adapters = adapters
-
   return adapters
 end
 
-local function run_all_adapter(root)
-  for _, adapter in ipairs(active_adapters) do
-    if adapter.root then
-      local ok, adapter_root = pcall(adapter.root, root)
-      if ok and adapter_root == root then return ('%s:%s'):format(adapter.name, root) end
-    end
-  end
-
-  return nil
-end
-
 local function run_all_tests()
-  local root = resolve_test_root(current_path())
-  if not root then
-    vim.notify('Neotest: not inside a recognised test project', vim.log.levels.WARN)
-    return
-  end
+  local args = run_root_args(current_path())
 
-  local adapter = run_all_adapter(root)
-  if not adapter then
-    vim.notify('Neotest: no adapter found for test project', vim.log.levels.WARN)
-    return
-  end
-
-  require('neotest').run.run { root, suite = true, adapter = adapter }
-end
-
-local function confirm_run_all_tests()
-  perf.confirm_with_progress(
-    'Neotest run all',
-    'Run all tests in the detected test project? This can trigger expensive discovery and external test commands.',
-    run_all_tests
-  )
-end
-
-local function debug_current_file()
-  perf.confirm_with_progress('Neotest debug file', 'Debug all tests in the current file? This will load DAP and may run expensive test discovery.', function()
-    pcall(vim.cmd, 'ZPack load nvim-dap')
-    require('neotest').run.run {
-      vim.fn.expand '%:p',
-      strategy = 'dap',
-    }
-  end)
-end
-
-local function toggle_watch_file()
-  perf.confirm_with_progress(
-    'Neotest watch file',
-    'Toggle watch mode for the current file? Watchers can be expensive in large projects.',
-    function() require('neotest').watch.toggle(run_args(vim.fn.expand '%:p')) end
-  )
-end
-
-local function toggle_output_panel()
-  perf.confirm_with_progress(
-    'Neotest output panel',
-    'Toggle the Neotest output panel? Rendering large test output can be expensive.',
-    function() require('neotest').output_panel.toggle() end
-  )
+  if args then require('neotest').run.run(args) end
 end
 
 local dependencies = {
@@ -239,7 +173,7 @@ return repo.spec('testing', {
     },
     {
       '<leader>tA',
-      confirm_run_all_tests,
+      run_all_tests,
       desc = 'Test: Run All',
     },
     {
@@ -254,7 +188,15 @@ return repo.spec('testing', {
     },
     {
       '<leader>tD',
-      debug_current_file,
+      function()
+        pcall(vim.cmd, 'ZPack load nvim-dap')
+
+        -- Debug current file.
+        require('neotest').run.run {
+          vim.fn.expand '%:p',
+          strategy = 'dap',
+        }
+      end,
       desc = 'Test: Debug File',
     },
     {
@@ -269,12 +211,12 @@ return repo.spec('testing', {
     },
     {
       '<leader>tO',
-      toggle_output_panel,
+      function() require('neotest').output_panel.toggle() end,
       desc = 'Test: Toggle Output Panel',
     },
     {
       '<leader>tw',
-      toggle_watch_file,
+      function() require('neotest').watch.toggle(run_args(vim.fn.expand '%:p')) end,
       desc = 'Test: Watch File',
     },
     {
@@ -293,7 +235,7 @@ return repo.spec('testing', {
     require('neotest').setup {
       adapters = build_adapters(),
       discovery = {
-        enabled = false,
+        enabled = true,
       },
       running = {
         concurrent = true,

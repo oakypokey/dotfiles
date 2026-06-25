@@ -1,6 +1,5 @@
 local repo = require 'tooling.repos'
 local registry = require 'tooling.registry'
-local perf = require 'util.perf'
 
 -- ============================================================
 -- SECTION 8: TREESITTER
@@ -53,15 +52,9 @@ return repo.spec('treesitter', {
     end
 
     local available_parsers = require('nvim-treesitter').get_available()
-    local function attach_for_filetype(buf, filetype, opts)
-      opts = opts or {}
-      if not opts.force and perf.is_expensive_feature_buffer(buf) then
-        perf.notify_skip_once(buf, 'perf_treesitter_skip_notified', 'Treesitter skipped for expensive buffer')
-        return false
-      end
-
+    local function attach_for_filetype(buf, filetype)
       local language = vim.treesitter.language.get_lang(filetype)
-      if not language then return false end
+      if not language then return end
 
       local installed_parsers = require('nvim-treesitter').get_installed 'parsers'
 
@@ -75,30 +68,7 @@ return repo.spec('treesitter', {
         -- Try to enable treesitter features in case the parser exists but is not available from `nvim-treesitter`
         treesitter_try_attach(buf, language)
       end
-
-      return true
     end
-
-    local function force_current_buffer()
-      local bufnr = vim.api.nvim_get_current_buf()
-      perf.confirm_with_progress('Treesitter current buffer', 'Treesitter can be expensive for large buffers. Run for current buffer?', function()
-        attach_for_filetype(bufnr, vim.bo[bufnr].filetype, { force = true })
-      end)
-    end
-
-    local function force_project_buffers()
-      perf.confirm_with_progress('Treesitter loaded project buffers', 'Run Treesitter attach for all loaded buffers in this project?', function()
-        local count = 0
-        for _, bufnr in ipairs(perf.project_buffers()) do
-          local ft = vim.bo[bufnr].filetype
-          if ft ~= '' and attach_for_filetype(bufnr, ft, { force = true }) then count = count + 1 end
-        end
-        vim.notify(string.format('Treesitter requested for %d loaded project buffers', count), vim.log.levels.INFO)
-      end)
-    end
-
-    vim.keymap.set('n', '<leader>pTb', force_current_buffer, { desc = 'Performance: Treesitter current buffer' })
-    vim.keymap.set('n', '<leader>pTp', force_project_buffers, { desc = 'Performance: Treesitter loaded project buffers' })
 
     vim.api.nvim_create_autocmd('FileType', {
       callback = function(args) attach_for_filetype(args.buf, args.match) end,
