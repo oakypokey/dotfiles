@@ -32,6 +32,10 @@ return repo.spec('snacks', {
       },
       explorer = {},
       scope = {},
+      bigfile = {},
+      dim = {},
+      scroll = {},
+      statuscolumn = {},
     }
 
     local function toggle_explorer()
@@ -46,5 +50,20 @@ return repo.spec('snacks', {
     end
 
     vim.keymap.set('n', '\\', toggle_explorer, { desc = 'Toggle/Jump to Snacks Explorer' })
+    Snacks.toggle
+      .new({
+        name = 'Dim',
+        get = function() return vim.g.snacks_dim ~= false end,
+        set = function(enabled)
+          vim.g.snacks_dim = enabled
+
+          if enabled then
+            Snacks.dim.enable()
+          else
+            Snacks.dim.disable()
+          end
+        end,
+      })
+      :map '<leader>,d'
   end,
 })
