@@ -28,15 +28,6 @@ vim.g.opencode_opts = {
       end
       terminal.open(opencode_cmd, snacks_terminal_opts)
     end,
-    stop = function()
-      local terminal = require 'snacks.terminal'
-      local win = terminal.get(opencode_cmd, { create = false })
-      if win then
-        win:close()
-        return
-      end
-    end,
-    toggle = function() require('snacks.terminal').toggle(opencode_cmd, snacks_terminal_opts) end,
   },
 }
 
@@ -66,25 +57,5 @@ return repo.spec('opencode', {
       if not self then return end
       return disconnect(self)
     end
-
-    -- Limit manual server selection to the current working directory.
-    local select_server = require 'opencode.ui.select_server'
-    local original_select_server = select_server.select_server
-    select_server.select_server = function(servers)
-      local matching_servers = vim.tbl_filter(cwd_matches, servers)
-      if #matching_servers == 0 then error('No `opencode` servers found for ' .. vim.fn.getcwd(), 0) end
-      return original_select_server(matching_servers)
-    end
-
-    -- snacks integration
-    local function opencode_send(...) return require('opencode').snacks_picker_send(...) end
-
-    local snacks = require 'snacks'
-    snacks.config.picker.actions = snacks.config.picker.actions or {}
-    snacks.config.picker.actions.opencode_send = opencode_send
-    snacks.config.picker.win = snacks.config.picker.win or {}
-    snacks.config.picker.win.input = snacks.config.picker.win.input or {}
-    snacks.config.picker.win.input.keys = snacks.config.picker.win.input.keys or {}
-    snacks.config.picker.win.input.keys['<a-a>'] = { 'opencode_send', mode = { 'n', 'i' } }
   end,
 })
