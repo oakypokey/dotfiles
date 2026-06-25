@@ -12,22 +12,34 @@ local snacks_terminal_opts = {
   },
 }
 
-local function normalize_path(path) return vim.fs.normalize(path or ''):gsub('/$', '') end
-
-local function cwd_matches(server) return normalize_path(server.cwd) == normalize_path(vim.fn.getcwd()) end
+local function get_opencode_terminal()
+  return require('snacks.terminal').get(opencode_cmd, {
+    create = false,
+  })
+end
 
 ---@type opencode.Opts
 vim.g.opencode_opts = {
   server = {
     start = function()
       local terminal = require 'snacks.terminal'
-      local win = terminal.get(opencode_cmd, { create = false })
+      local win = get_opencode_terminal()
+
       if win then
         win:show()
         return
       end
+
       terminal.open(opencode_cmd, snacks_terminal_opts)
     end,
+
+    stop = function()
+      local win = get_opencode_terminal()
+
+      if win then win:close() end
+    end,
+
+    toggle = function() require('snacks.terminal').toggle(opencode_cmd, snacks_terminal_opts) end,
   },
 }
 
