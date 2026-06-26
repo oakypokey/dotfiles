@@ -235,7 +235,7 @@ return repo.spec('testing', {
     require('neotest').setup {
       adapters = build_adapters(),
       discovery = {
-        enabled = true,
+        enabled = false,
       },
       running = {
         concurrent = true,
