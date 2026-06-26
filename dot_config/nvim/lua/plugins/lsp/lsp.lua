@@ -1,5 +1,6 @@
 local repo = require 'tooling.repos'
 local registry = require 'tooling.registry'
+local buffer = require 'util.buffer'
 
 -- ============================================================
 -- SECTION 5: LSP
@@ -44,7 +45,7 @@ local function setup_lsp_attach()
       map('grD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
 
       local client = vim.lsp.get_client_by_id(event.data.client_id)
-      if client and vim.bo[event.buf].filetype ~= '' then
+      if client and buffer.is_file_buffer(event.buf) and vim.bo[event.buf].filetype ~= '' then
         if client:supports_method('workspace/diagnostic', event.buf) then
           vim.lsp.buf.workspace_diagnostics { client_id = client.id }
         elseif client.config.filetypes and client.name ~= 'basedpyright' and client.name ~= 'roslyn_ls' then

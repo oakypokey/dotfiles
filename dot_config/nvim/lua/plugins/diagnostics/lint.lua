@@ -2,6 +2,7 @@
 
 local repo = require 'tooling.repos'
 local registry = require 'tooling.registry'
+local buffer = require 'util.buffer'
 
 return repo.spec('lint', {
   dependencies = {
@@ -53,7 +54,7 @@ return repo.spec('lint', {
         -- Only run the linter in buffers that you can modify in order to
         -- avoid superfluous noise, notably within the handy LSP pop-ups that
         -- describe the hovered symbol using Markdown.
-        if vim.bo.modifiable then lint.try_lint() end
+        if buffer.is_file_buffer() and vim.bo.modifiable then lint.try_lint() end
       end,
     })
   end,

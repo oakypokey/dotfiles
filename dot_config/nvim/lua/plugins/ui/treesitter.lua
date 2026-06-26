@@ -1,5 +1,6 @@
 local repo = require 'tooling.repos'
 local registry = require 'tooling.registry'
+local buffer = require 'util.buffer'
 
 -- ============================================================
 -- SECTION 8: TREESITTER
@@ -53,6 +54,8 @@ return repo.spec('treesitter', {
 
     local available_parsers = require('nvim-treesitter').get_available()
     local function attach_for_filetype(buf, filetype)
+      if not buffer.is_file_buffer(buf) then return end
+
       local language = vim.treesitter.language.get_lang(filetype)
       if not language then return end
 
