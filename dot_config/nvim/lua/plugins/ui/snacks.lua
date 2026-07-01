@@ -14,18 +14,26 @@ return repo.spec('snacks', {
       picker = {
         sources = {},
         actions = {
-          opencode_send = function(picker) ---@param picker snacks.Picker
-            local items = vim.tbl_map(function(item) ---@param item snacks.picker.Item
-              return item.file and require('opencode').format { path = item.file, from = item.pos, to = item.end_pos } or item.text
-            end, picker:selected { fallback = true })
+          claudecode_send = function(picker) ---@param picker snacks.Picker
+            local claudecode = require 'claudecode'
+            local count = 0
 
-            require('opencode').prompt(table.concat(items, ', ') .. ' ')
+            for _, item in ipairs(picker:selected { fallback = true }) do
+              local path = Snacks.picker.util.path(item)
+              if path and path ~= '' then
+                local ok = claudecode.send_at_mention(path, nil, nil, 'snacks-picker')
+                if ok then count = count + 1 end
+              end
+            end
+
+            picker:close()
+            vim.notify(('Added %d file(s) to Claude Code context'):format(count), vim.log.levels.INFO)
           end,
         },
         win = {
           input = {
             keys = {
-              ['<a-a>'] = { 'opencode_send', mode = { 'n', 'i' } },
+              ['<a-a>'] = { 'claudecode_send', mode = { 'n', 'i' } },
             },
           },
         },
