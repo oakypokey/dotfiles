@@ -50,3 +50,5 @@ require('zpack').setup {
   },
   spec = specs,
 }
+
+require('plugins.integrations.ai_switch').setup()

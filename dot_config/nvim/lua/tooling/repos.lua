@@ -71,6 +71,7 @@ M.entries = {
   undotree = { 'mbbill/undotree' },
 
   -- Integrations
+  claudecode = { 'coder/claudecode.nvim' },
   opencode = { 'nickjvandyke/opencode.nvim' },
 
   -- Shared dependencies
