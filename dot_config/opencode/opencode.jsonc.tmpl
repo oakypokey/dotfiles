@@ -3,7 +3,7 @@
 {{- $opencodeProviderOpenai := get . "opencode_provider_openai" | default false -}}
 {{- $opencodeOllamaHost := get . "opencode_ollama_host" | default "" -}}
 {{- $opencodeMetalHost := get . "opencode_metal_host" | default "" -}}
-{{- $opencodeMcpServers := get . "opencode_mcp_servers" | default (list) -}}
+{{- $mcpServers := get . "mcp_servers" | default (get . "opencode_mcp_servers") | default (list) -}}
 {{- define "openaiCompatibleProvider" }}
     "{{ .id }}": {
       "npm": "@ai-sdk/openai-compatible",
@@ -295,7 +295,7 @@
   },
   "mcp": {
 {{- $mcpComma := false -}}
-{{- if has "chrome-devtools" $opencodeMcpServers }}
+{{- if has "chrome-devtools" $mcpServers }}
     "chrome-devtools": {
       "type": "local",
       "command": [
@@ -306,7 +306,7 @@
     }
 {{- $mcpComma = true -}}
 {{- end }}
-{{- if has "gitea" $opencodeMcpServers }}{{ if $mcpComma }},{{ end }}
+{{- if has "gitea" $mcpServers }}{{ if $mcpComma }},{{ end }}
     "gitea": {
       "type": "local",
       "command": [
@@ -319,7 +319,7 @@
     }
 {{- $mcpComma = true -}}
 {{- end }}
-{{- if has "context7" $opencodeMcpServers }}{{ if $mcpComma }},{{ end }}
+{{- if has "context7" $mcpServers }}{{ if $mcpComma }},{{ end }}
     "context7": {
       "type": "remote",
       "url": "https://mcp.context7.com/mcp"

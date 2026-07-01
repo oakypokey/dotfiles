@@ -1,4 +1,4 @@
-{{- $claudeMcpServers := get . "claude_mcp_servers" | default (list "chrome-devtools" "gitea") -}}
+{{- $mcpServers := get . "mcp_servers" | default (get . "claude_mcp_servers") | default (list "chrome-devtools" "gitea") -}}
 {{- $claudeProvider := get . "claude_provider" | default "codex" -}}
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
@@ -27,7 +27,7 @@
   },
   "mcpServers": {
 {{- $mcpComma := false -}}
-{{- if has "chrome-devtools" $claudeMcpServers }}
+{{- if has "chrome-devtools" $mcpServers }}
     "chrome-devtools": {
       "command": "npx",
       "args": [
@@ -37,7 +37,7 @@
     }
 {{- $mcpComma = true -}}
 {{- end }}
-{{- if has "gitea" $claudeMcpServers }}{{ if $mcpComma }},{{ end }}
+{{- if has "gitea" $mcpServers }}{{ if $mcpComma }},{{ end }}
     "gitea": {
       "command": "go",
       "args": [
@@ -49,7 +49,7 @@
     }
 {{- $mcpComma = true -}}
 {{- end }}
-{{- if has "context7" $claudeMcpServers }}{{ if $mcpComma }},{{ end }}
+{{- if has "context7" $mcpServers }}{{ if $mcpComma }},{{ end }}
     "context7": {
       "type": "http",
       "url": "https://mcp.context7.com/mcp"
