@@ -27,6 +27,9 @@
 {{- end -}}
 {{- $opencodeMcpChoices := list "chrome-devtools" "gitea" "context7" -}}
 {{- $opencodeMcpServers := promptMultichoiceOnce . "opencode_mcp_servers" "OpenCode MCP servers to include" $opencodeMcpChoices (list "chrome-devtools" "gitea") -}}
+{{- $claudeMcpChoices := list "chrome-devtools" "gitea" "context7" -}}
+{{- $claudeMcpServers := promptMultichoiceOnce . "claude_mcp_servers" "Claude Code MCP servers to include" $claudeMcpChoices (list "chrome-devtools" "gitea") -}}
+{{- $claudeProvider := promptChoiceOnce . "claude_provider" "Claude Code provider" (list "default" "codex") "codex" -}}
 {{- $name := promptStringOnce . "name" "Name" -}}
 {{- $homeDir := printf "/Users/%s" .chezmoi.username -}}
 
@@ -36,6 +39,8 @@
 
 [data]
     email = {{ $email | quote }}
+    claude_mcp_servers = {{ $claudeMcpServers | toToml }}
+    claude_provider = {{ $claudeProvider | quote }}
     gitea_access_token_available = {{ or $giteaAccessTokenInKeychain (ne $giteaAccessToken "") }}
     gitea_host = {{ $giteaHost | quote }}
     local_bin = {{ printf "%s/.local/bin" $homeDir | quote }}

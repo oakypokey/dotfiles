@@ -1,0 +1,59 @@
+{{- $claudeMcpServers := get . "claude_mcp_servers" | default (list "chrome-devtools" "gitea") -}}
+{{- $claudeProvider := get . "claude_provider" | default "codex" -}}
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "cleanupPeriodDays": 30,
+  "autoUpdatesChannel": "latest",
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)"
+    ]
+  },
+  "env": {
+{{- if eq $claudeProvider "codex" }}
+    "ANTHROPIC_BASE_URL": "http://localhost:18765",
+    "ANTHROPIC_MODEL": "gpt-5.4",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "gpt-5.4",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "gpt-5.3-codex",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "gpt-5.4-mini",
+    "ANTHROPIC_SMALL_FAST_MODEL": "gpt-5.4-mini",
+    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "272000",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "CLAUDE_CODE_DISABLE_NONSTREAMING_FALLBACK": "1",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "gpt-5.4-mini"
+{{- end }}
+  },
+  "mcpServers": {
+{{- $mcpComma := false -}}
+{{- if has "chrome-devtools" $claudeMcpServers }}
+    "chrome-devtools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest"
+      ]
+    }
+{{- $mcpComma = true -}}
+{{- end }}
+{{- if has "gitea" $claudeMcpServers }}{{ if $mcpComma }},{{ end }}
+    "gitea": {
+      "command": "go",
+      "args": [
+        "run",
+        "gitea.com/gitea/gitea-mcp@latest",
+        "-t",
+        "stdio"
+      ]
+    }
+{{- $mcpComma = true -}}
+{{- end }}
+{{- if has "context7" $claudeMcpServers }}{{ if $mcpComma }},{{ end }}
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
+    }
+{{- end }}
+  }
+}
