@@ -12,7 +12,9 @@
     ]
   },
   "env": {
+    "CLAUDE_SESSION": "1"
 {{- if eq $claudeProvider "codex" }}
+    ,
     "ANTHROPIC_BASE_URL": "http://localhost:18765",
     "ANTHROPIC_MODEL": "gpt-5.4",
     "ANTHROPIC_DEFAULT_SONNET_MODEL": "gpt-5.4",
