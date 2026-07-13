@@ -1,23 +1,39 @@
 local registry = require 'tooling.registry'
+local js_project = require 'util.js_project'
+
+local filetypes = { 'javascript', 'javascriptreact', 'typescript', 'typescriptreact' }
+
+local function reuse_same_root(name)
+  return function(client, config) return client.name == name and js_project.same_root(client.root_dir, config.root_dir) end
+end
 
 registry.lsp_server('ts_ls', {
   mason = 'typescript-language-server',
+  cmd = { 'typescript-language-server', '--stdio' },
+  filetypes = filetypes,
+  workspace_required = true,
   root_dir = function(bufnr, on_dir)
-    on_dir(vim.fs.root(bufnr, {
-      'tsconfig.json',
-      'jsconfig.json',
-      'deno.json',
-      'deno.jsonc',
-      'deno.lock',
-      'package.json',
-      'package-lock.json',
-      'yarn.lock',
-      'pnpm-lock.yaml',
-      'bun.lock',
-      'bun.lockb',
-      '.git',
-    }) or vim.fn.getcwd())
+    local project = js_project.find(bufnr)
+    if not project or project.kind == 'deno' then return end
+
+    on_dir(project.root)
   end,
+  reuse_client = reuse_same_root 'ts_ls',
+  single_file_support = false,
+})
+
+registry.lsp_server('denols', {
+  mason = 'deno',
+  cmd = { 'deno', 'lsp' },
+  filetypes = filetypes,
+  workspace_required = true,
+  root_dir = function(bufnr, on_dir)
+    local project = js_project.find(bufnr)
+    if not project or project.kind ~= 'deno' then return end
+
+    on_dir(project.root)
+  end,
+  reuse_client = reuse_same_root 'denols',
 })
 
 registry.treesitter { 'javascript', 'typescript', 'tsx' }
