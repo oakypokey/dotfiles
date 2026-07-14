@@ -159,7 +159,7 @@ return repo.spec('dap', {
     dap.listeners.before.event_terminated['dapui_config'] = dapui.close
     dap.listeners.before.event_exited['dapui_config'] = dapui.close
 
-    pcall(function() require('overseer').enable_dap() end)
+    require('overseer').enable_dap()
 
     local context = {
       mason_package_path = mason_package_path,

@@ -40,8 +40,7 @@ return repo.spec('overseer', {
   },
   config = function()
     require('overseer').setup {
-      templates = { 'builtin' },
-      dap = true,
+      dap = false,
     }
   end,
 })
