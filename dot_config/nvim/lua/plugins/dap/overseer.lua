@@ -9,7 +9,6 @@ return repo.spec('overseer', {
     'OverseerInfo',
     'OverseerLoadBundle',
     'OverseerOpen',
-    'OverseerQuickAction',
     'OverseerRun',
     'OverseerRunCmd',
     'OverseerSaveBundle',
@@ -28,13 +27,8 @@ return repo.spec('overseer', {
       desc = 'Overseer: Toggle Tasks',
     },
     {
-      '<leader>oq',
-      function() require('overseer').quick_action() end,
-      desc = 'Overseer: Quick Action',
-    },
-    {
       '<leader>oa',
-      function() require('overseer').task_action() end,
+      function() require('overseer.commands').task_action() end,
       desc = 'Overseer: Task Action',
     },
   },
